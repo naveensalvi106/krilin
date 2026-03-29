@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const VAPID_PUBLIC_KEY =
-  "BGWS6V440AeIBkbjXbn1-LR9Qkag0ryitireNChNTKbxEou3qVxMGYfLrmkKM3oVuuxisVVC9WTZD4Xer2nrJSY";
+  "BLpic-q0e4n0laKNA6mGXy9kkgV8zoaLZAyJprnWXY0yNTNDN9Wwg_aIbpOJzz44rDLy8j6991XtSAQPLZ37KYQ";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
