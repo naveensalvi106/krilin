@@ -81,7 +81,21 @@ function playAlarm() {
       alarmStop = null;
     };
 
-    setTimeout(() => { alarmStop?.(); }, 10000);
+    // Repeat alarm bursts for ~30 seconds total
+    const repeats: ReturnType<typeof setTimeout>[] = [];
+    for (let r = 0; r < 8; r++) {
+      repeats.push(setTimeout(() => playAlarmBurst(ctx, gainNode), (totalDuration + 0.5 + r * 2.5) * 1000));
+    }
+
+    alarmStop = () => {
+      clearTimeout(repeatTimeout1);
+      clearTimeout(repeatTimeout2);
+      repeats.forEach(t => clearTimeout(t));
+      oscillators.forEach(o => { try { o.stop(); } catch {} });
+      alarmStop = null;
+    };
+
+    setTimeout(() => { alarmStop?.(); }, 30000);
 
   } catch (e) {
     console.warn('Could not play alarm:', e);
