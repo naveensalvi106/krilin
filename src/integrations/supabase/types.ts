@@ -14,7 +14,192 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      notepad_sections: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          images: string[] | null
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          images?: string[] | null
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      revival_steps: {
+        Row: {
+          created_at: string
+          id: string
+          step: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          step: number
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          step?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      revival_videos: {
+        Row: {
+          channel: string
+          created_at: string
+          id: string
+          title: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          id?: string
+          title: string
+          url: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          id?: string
+          title?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sections: {
+        Row: {
+          color: string
+          created_at: string
+          icon: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          color: string
+          created_at?: string
+          icon: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          icon?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          bandaids: string[] | null
+          completed: boolean
+          created_at: string
+          id: string
+          problems: Json | null
+          reminder_time: string | null
+          section_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          bandaids?: string[] | null
+          completed?: boolean
+          created_at?: string
+          id?: string
+          problems?: Json | null
+          reminder_time?: string | null
+          section_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          bandaids?: string[] | null
+          completed?: boolean
+          created_at?: string
+          id?: string
+          problems?: Json | null
+          reminder_time?: string | null
+          section_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      visualizations: {
+        Row: {
+          created_at: string
+          id: string
+          image: string | null
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image?: string | null
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image?: string | null
+          text?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
