@@ -12,11 +12,13 @@ import Notepad from '@/components/Notepad';
 import ChatWidget from '@/components/ChatWidget';
 import { AnimatePresence } from 'framer-motion';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
+import { usePushSubscription } from '@/hooks/usePushSubscription';
 
 const Index = () => {
   const store = useAppStore();
   const { signOut } = useAuth();
   useTaskReminders(store.tasks);
+  usePushSubscription();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showVisSettings, setShowVisSettings] = useState(false);
   const [newVis, setNewVis] = useState('');
