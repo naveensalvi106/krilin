@@ -18,6 +18,7 @@ const Index = () => {
   const store = useAppStore();
   const { signOut } = useAuth();
   useTaskReminders(store.tasks);
+  usePushSubscription();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showVisSettings, setShowVisSettings] = useState(false);
   const [newVis, setNewVis] = useState('');
