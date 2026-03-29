@@ -30,10 +30,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Ensure key is proper URL-safe base64 without padding
+    const cleanPrivateKey = vapidPrivateKey.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_").trim();
+
     webpush.setVapidDetails(
       "mailto:noreply@easyflow.app",
       VAPID_PUBLIC_KEY,
-      vapidPrivateKey
+      cleanPrivateKey
     );
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
