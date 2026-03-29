@@ -10,7 +10,6 @@ interface TimePickerModalProps {
 }
 
 const HOURS_12 = [12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-const MINUTES = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
 
 const TimePickerModal = ({ open, onClose, onConfirm, initialTime }: TimePickerModalProps) => {
   const parseInitial = () => {
@@ -39,9 +38,6 @@ const TimePickerModal = ({ open, onClose, onConfirm, initialTime }: TimePickerMo
     onClose();
   };
 
-  const items = mode === 'hour' ? HOURS_12 : MINUTES;
-  const selectedValue = mode === 'hour' ? selectedHour : selectedMinute;
-
   const getPosition = (index: number, total: number, radius: number) => {
     const angle = (index * 360) / total - 90;
     const rad = (angle * Math.PI) / 180;
@@ -59,14 +55,9 @@ const TimePickerModal = ({ open, onClose, onConfirm, initialTime }: TimePickerMo
     let angle = Math.atan2(clientY - cy, clientX - cx) * (180 / Math.PI) + 90;
     if (angle < 0) angle += 360;
 
-    if (mode === 'hour') {
-      const hourIndex = Math.round(angle / 30) % 12;
-      setSelectedHour(HOURS_12[hourIndex]);
-    } else {
-      const minIndex = Math.round(angle / 30) % 12;
-      setSelectedMinute(MINUTES[minIndex]);
-    }
-  }, [mode]);
+    const hourIndex = Math.round(angle / 30) % 12;
+    setSelectedHour(HOURS_12[hourIndex]);
+  }, []);
 
   const handlePointerDown = (e: React.PointerEvent) => {
     handleClockInteraction(e.clientX, e.clientY);
@@ -74,16 +65,14 @@ const TimePickerModal = ({ open, onClose, onConfirm, initialTime }: TimePickerMo
     const onUp = () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
-      if (mode === 'hour') setMode('minute');
+      setMode('minute');
     };
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
   };
 
-  const selectedIndex = mode === 'hour'
-    ? HOURS_12.indexOf(selectedHour)
-    : MINUTES.indexOf(selectedMinute);
-  const handAngle = selectedIndex >= 0 ? (selectedIndex * 360) / items.length - 90 : 0;
+  const selectedIndex = HOURS_12.indexOf(selectedHour);
+  const handAngle = selectedIndex >= 0 ? (selectedIndex * 360) / HOURS_12.length - 90 : 0;
 
   if (!open) return null;
 
@@ -151,42 +140,60 @@ const TimePickerModal = ({ open, onClose, onConfirm, initialTime }: TimePickerMo
           ))}
         </div>
 
-        {/* Clock Face */}
-        <div ref={clockRef} className="relative touch-none" onPointerDown={handlePointerDown}>
-          <svg width="240" height="240" viewBox="0 0 240 240">
-            {/* Background circle */}
-            <circle cx="120" cy="120" r="110" fill="hsl(15, 10%, 8%)" stroke="hsl(15, 20%, 16%)" strokeWidth="1" />
-
-            {/* Clock hand */}
-            {selectedIndex >= 0 && (() => {
-              const pos = getPosition(selectedIndex, items.length, 82);
-              return (
-                <>
-                  <line x1="120" y1="120" x2={pos.x} y2={pos.y} stroke="hsl(20, 90%, 52%)" strokeWidth="2" />
-                  <circle cx={pos.x} cy={pos.y} r="16" fill="hsl(20, 90%, 52%)" opacity="0.9" />
-                </>
-              );
-            })()}
-
-            {/* Number labels */}
-            {items.map((val, i) => {
-              const pos = getPosition(i, items.length, 82);
-              const isSelected = val === selectedValue;
-              return (
-                <text
-                  key={val}
-                  x={pos.x} y={pos.y}
-                  textAnchor="middle" dominantBaseline="central"
-                  fill={isSelected ? 'white' : 'hsl(25, 10%, 50%)'}
-                  fontSize="14" fontWeight={isSelected ? 'bold' : 'normal'}
-                  style={{ fontFamily: 'Inter, sans-serif' }}
+        {/* Clock Face for Hours / Grid for Minutes */}
+        {mode === 'hour' ? (
+          <div ref={clockRef} className="relative touch-none" onPointerDown={handlePointerDown}>
+            <svg width="240" height="240" viewBox="0 0 240 240">
+              <circle cx="120" cy="120" r="110" fill="hsl(15, 10%, 8%)" stroke="hsl(15, 20%, 16%)" strokeWidth="1" />
+              {selectedIndex >= 0 && (() => {
+                const pos = getPosition(selectedIndex, HOURS_12.length, 82);
+                return (
+                  <>
+                    <line x1="120" y1="120" x2={pos.x} y2={pos.y} stroke="hsl(20, 90%, 52%)" strokeWidth="2" />
+                    <circle cx={pos.x} cy={pos.y} r="16" fill="hsl(20, 90%, 52%)" opacity="0.9" />
+                  </>
+                );
+              })()}
+              {HOURS_12.map((val, i) => {
+                const pos = getPosition(i, HOURS_12.length, 82);
+                const isSelected = val === selectedHour;
+                return (
+                  <text
+                    key={val}
+                    x={pos.x} y={pos.y}
+                    textAnchor="middle" dominantBaseline="central"
+                    fill={isSelected ? 'white' : 'hsl(25, 10%, 50%)'}
+                    fontSize="14" fontWeight={isSelected ? 'bold' : 'normal'}
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    {val}
+                  </text>
+                );
+              })}
+            </svg>
+          </div>
+        ) : (
+          <div className="w-[240px] h-[240px] rounded-full overflow-hidden flex items-center justify-center" style={{ background: 'hsl(15, 10%, 8%)', border: '1px solid hsl(15, 20%, 16%)' }}>
+            <div className="grid grid-cols-6 gap-1 p-3 max-h-[230px] overflow-y-auto">
+              {Array.from({ length: 60 }, (_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSelectedMinute(i)}
+                  className="w-8 h-8 rounded-full text-xs font-medium flex items-center justify-center transition-all"
+                  style={selectedMinute === i ? {
+                    background: 'hsl(20, 90%, 52%)',
+                    color: 'white',
+                    boxShadow: '0 0 8px hsla(20, 100%, 50%, 0.4)',
+                  } : {
+                    color: 'hsl(25, 10%, 50%)',
+                  }}
                 >
-                  {mode === 'minute' ? String(val).padStart(2, '0') : val}
-                </text>
-              );
-            })}
-          </svg>
-        </div>
+                  {String(i).padStart(2, '0')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Actions */}
         <div className="flex gap-3 w-full">
