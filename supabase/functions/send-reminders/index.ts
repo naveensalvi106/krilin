@@ -16,19 +16,34 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vapidPrivateKey = "ydWFb-Wz6tA-RGstDgR62eBdkzWQ32bGu6kKC65HqBY";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY");
+
+    console.log("send-reminders env check", {
+      hasSupabaseUrl: !!supabaseUrl,
+      hasServiceRoleKey: !!serviceRoleKey,
+      hasVapidPrivateKey: !!vapidPrivateKey,
+    });
+
+    if (!supabaseUrl || !serviceRoleKey || !vapidPrivateKey) {
+      return new Response(
+        JSON.stringify({ error: "Missing required backend secrets" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     webpush.setVapidDetails(
-      "mailto:noreply@easyflow.app",
+      "mailto:noreply@example.com",
       VAPID_PUBLIC_KEY,
-      vapidPrivateKey
+      vapidPrivateKey.trim()
     );
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get current time as HH:MM in UTC
     const now = new Date();
     const currentTime = `${String(now.getUTCHours()).padStart(2, "0")}:${String(
       now.getUTCMinutes()
@@ -36,7 +51,6 @@ Deno.serve(async (req) => {
 
     console.log("Checking reminders for time:", currentTime);
 
-    // Find tasks with reminders due now
     const { data: dueTasks, error: tasksError } = await supabase
       .from("tasks")
       .select("id, title, user_id, reminder_time")
@@ -64,11 +78,19 @@ Deno.serve(async (req) => {
     let errors = 0;
 
     for (const task of dueTasks) {
-      // Get all push subscriptions for this task's user
-      const { data: subs } = await supabase
+      const { data: subs, error: subsError } = await supabase
         .from("push_subscriptions")
         .select("endpoint, p256dh, auth")
         .eq("user_id", task.user_id);
+
+      if (subsError) {
+        console.error("Failed to load subscriptions", {
+          userId: task.user_id,
+          error: subsError.message,
+        });
+        errors++;
+        continue;
+      }
 
       if (!subs || subs.length === 0) {
         console.log(`No push subscriptions for user ${task.user_id}`);
@@ -84,7 +106,7 @@ Deno.serve(async (req) => {
 
       for (const sub of subs) {
         try {
-          await webpush.sendNotification(
+          const response = await webpush.sendNotification(
             {
               endpoint: sub.endpoint,
               keys: {
@@ -95,18 +117,29 @@ Deno.serve(async (req) => {
             payload,
             { TTL: 86400, urgency: "high" }
           );
+
           sent++;
-          console.log(`Sent notification for task "${task.title}" to ${sub.endpoint.slice(0, 50)}...`);
+          console.log("Push sent", {
+            endpoint: sub.endpoint.slice(0, 80),
+            statusCode: response.statusCode,
+          });
         } catch (err: any) {
-          if (err.statusCode === 410 || err.statusCode === 404) {
-            // Subscription expired, clean up
-            await supabase
-              .from("push_subscriptions")
-              .delete()
-              .eq("endpoint", sub.endpoint);
-            console.log("Removed expired subscription");
+          const statusCode = err?.statusCode ?? err?.status;
+          const responseBody = err?.body || err?.message || String(err);
+
+          if (statusCode === 410 || statusCode === 404) {
+            await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+            console.log("Removed expired subscription", {
+              endpoint: sub.endpoint.slice(0, 80),
+              statusCode,
+            });
           } else {
-            console.error(`Push failed for ${sub.endpoint.slice(0, 50)}:`, err.message || err);
+            console.error("Push delivery failed", {
+              endpoint: sub.endpoint.slice(0, 80),
+              statusCode,
+              responseBody,
+              headers: err?.headers,
+            });
             errors++;
           }
         }
