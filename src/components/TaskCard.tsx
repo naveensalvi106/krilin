@@ -69,12 +69,22 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
               </span>
             )}
 
-            {task.reminderTime && (
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Clock className="w-3 h-3" />
-                {task.reminderTime}
-              </span>
-            )}
+            {task.reminderTime && (() => {
+              // Convert UTC reminder time to local for display
+              const [h, m] = task.reminderTime.split(':').map(Number);
+              const d = new Date();
+              d.setUTCHours(h, m, 0, 0);
+              const localTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+              const hour12 = d.getHours() % 12 || 12;
+              const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+              const displayTime = `${hour12}:${String(d.getMinutes()).padStart(2, '0')} ${ampm}`;
+              return (
+                <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                  <Clock className="w-3 h-3" />
+                  {displayTime}
+                </span>
+              );
+            })()}
 
             {/* Bandaid */}
             <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); }}
