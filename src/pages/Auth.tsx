@@ -1,9 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { toast } from 'sonner';
+
+const PUBLISHED_AUTH_URL = 'https://easy-flowss.lovable.app/auth?oauth=google';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,6 +13,47 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const autoOauthStartedRef = useRef(false);
+
+  const isPreviewHost =
+    window.location.hostname.includes('id-preview--') ||
+    window.location.hostname.includes('lovableproject.com');
+
+  const startGoogleSignIn = async () => {
+    if (loading) return;
+
+    if (isPreviewHost) {
+      window.location.href = PUBLISHED_AUTH_URL;
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { error } = await lovable.auth.signInWithOAuth('google', {
+        redirect_uri: window.location.origin,
+        extraParams: {
+          prompt: 'select_account',
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      const message = err?.message || 'Google sign-in failed';
+      if (message.toLowerCase().includes('state verification failed')) {
+        toast.error('Google sign-in failed in this browser session. Please open the published app and try again.');
+      } else {
+        toast.error(message);
+      }
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('oauth') !== 'google' || autoOauthStartedRef.current || isPreviewHost) return;
+
+    autoOauthStartedRef.current = true;
+    void startGoogleSignIn();
+  }, [isPreviewHost]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
