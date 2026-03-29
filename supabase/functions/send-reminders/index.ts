@@ -31,7 +31,15 @@ Deno.serve(async (req) => {
     }
 
     // Ensure key is proper URL-safe base64 without padding
-    const cleanPrivateKey = vapidPrivateKey.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_").trim();
+    const cleanPrivateKey = vapidPrivateKey
+      .trim()
+      .replace(/['"]/g, "")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_")
+      .replace(/\s/g, "");
+
+    console.log("VAPID private key length:", cleanPrivateKey.length, "chars:", cleanPrivateKey.slice(0, 5) + "...");
 
     webpush.setVapidDetails(
       "mailto:noreply@easyflow.app",
