@@ -9,6 +9,7 @@ import AddTaskForm from '@/components/AddTaskForm';
 import RevivalProtocol from '@/components/RevivalProtocol';
 import SectionNav from '@/components/SectionNav';
 import Notepad from '@/components/Notepad';
+import ChatWidget from '@/components/ChatWidget';
 import { AnimatePresence } from 'framer-motion';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 
@@ -159,9 +160,10 @@ const Index = () => {
           onRemoveStep={store.removeRevivalStep}
         />
 
-        <div className="fixed bottom-6 right-6 z-40">
+        <div className="fixed bottom-6 right-20 z-40">
           <Notepad />
         </div>
+        <ChatWidget />
       </div>
     </div>
   );
