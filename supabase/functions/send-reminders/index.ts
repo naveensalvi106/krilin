@@ -20,21 +20,10 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const vapidPrivateKey = "WTYJabyZljpaaRs8Axk0Hm_ftSruIxP-VARLg5laRUc";
 
-    // Ensure key is proper URL-safe base64 without padding
-    const cleanPrivateKey = vapidPrivateKey
-      .trim()
-      .replace(/['"]/g, "")
-      .replace(/=/g, "")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_")
-      .replace(/\s/g, "");
-
-    console.log("VAPID private key length:", cleanPrivateKey.length, "chars:", cleanPrivateKey.slice(0, 5) + "...");
-
     webpush.setVapidDetails(
       "mailto:noreply@easyflow.app",
       VAPID_PUBLIC_KEY,
-      cleanPrivateKey
+      vapidPrivateKey
     );
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
