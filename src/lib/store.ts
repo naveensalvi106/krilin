@@ -160,12 +160,20 @@ export function useAppStore() {
 
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'>) => {
     if (!user) return;
+    // Convert local reminder time to UTC for server-side matching
+    let utcReminderTime: string | null = null;
+    if (task.reminderTime) {
+      const [h, m] = task.reminderTime.split(':').map(Number);
+      const now = new Date();
+      now.setHours(h, m, 0, 0);
+      utcReminderTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
+    }
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id,
       title: task.title,
       section_id: task.sectionId,
       bandaids: task.bandaids,
-      reminder_time: task.reminderTime || null,
+      reminder_time: utcReminderTime,
       problems: [] as unknown as Json,
     }).select().single();
     if (inserted && !error) {

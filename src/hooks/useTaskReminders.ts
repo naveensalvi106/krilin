@@ -127,16 +127,17 @@ export function useTaskReminders(tasks: Task[]) {
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
-      const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+      // reminder times are stored in UTC, so compare with UTC
+      const currentTimeUTC = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
 
       tasks.forEach(task => {
         if (
           task.reminderTime &&
           !task.completed &&
-          task.reminderTime === currentTime &&
-          !firedRef.current.has(`${task.id}-${currentTime}`)
+          task.reminderTime === currentTimeUTC &&
+          !firedRef.current.has(`${task.id}-${currentTimeUTC}`)
         ) {
-          firedRef.current.add(`${task.id}-${currentTime}`);
+          firedRef.current.add(`${task.id}-${currentTimeUTC}`);
           showNotification(task);
         }
       });
