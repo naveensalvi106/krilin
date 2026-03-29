@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const VAPID_PUBLIC_KEY =
-  "BLpic-q0e4n0laKNA6mGXy9kkgV8zoaLZAyJprnWXY0yNTNDN9Wwg_aIbpOJzz44rDLy8j6991XtSAQPLZ37KYQ";
+  "BL2-lDcSoS7YmRuzyvpeuObdwSV0rZAtknQT-pne_DGDdjLZAwwmdy59bVpF3JfyciytwW_CKVtwjfed8WMJKr8";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vapidPrivateKey = "WTYJabyZljpaaRs8Axk0Hm_ftSruIxP-VARLg5laRUc";
+    const vapidPrivateKey = "ydWFb-Wz6tA-RGstDgR62eBdkzWQ32bGu6kKC65HqBY";
 
     webpush.setVapidDetails(
       "mailto:noreply@easyflow.app",
