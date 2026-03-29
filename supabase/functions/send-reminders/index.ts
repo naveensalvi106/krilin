@@ -18,17 +18,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
-
-    if (!vapidPrivateKey) {
-      return new Response(
-        JSON.stringify({ error: "VAPID_PRIVATE_KEY not set" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    const vapidPrivateKey = "WTYJabyZljpaaRs8Axk0Hm_ftSruIxP-VARLg5laRUc";
 
     // Ensure key is proper URL-safe base64 without padding
     const cleanPrivateKey = vapidPrivateKey
