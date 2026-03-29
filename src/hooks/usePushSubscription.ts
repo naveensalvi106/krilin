@@ -1,0 +1,69 @@
+import { useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+
+const VAPID_PUBLIC_KEY = 'BGWS6V440AeIBkbjXbn1-LR9Qkag0ryitireNChNTKbxEou3qVxMGYfLrmkKM3oVuuxisVVC9WTZD4Xer2nrJSY';
+
+function urlBase64ToUint8Array(base64String: string) {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+export function usePushSubscription() {
+  const { user } = useAuth();
+
+  useEffect(() => {
+    if (!user) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+    // Don't register in iframes or preview hosts
+    const isInIframe = (() => {
+      try { return window.self !== window.top; } catch { return true; }
+    })();
+    const isPreviewHost =
+      window.location.hostname.includes('id-preview--') ||
+      window.location.hostname.includes('lovableproject.com');
+    if (isPreviewHost || isInIframe) return;
+
+    const subscribe = async () => {
+      try {
+        const registration = await navigator.serviceWorker.register('/sw.js');
+        await navigator.serviceWorker.ready;
+
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+          });
+        }
+
+        const subJson = subscription.toJSON();
+        if (!subJson.endpoint || !subJson.keys) return;
+
+        await supabase.from('push_subscriptions' as any).upsert(
+          {
+            user_id: user.id,
+            endpoint: subJson.endpoint,
+            p256dh: subJson.keys.p256dh,
+            auth: subJson.keys.auth,
+          },
+          { onConflict: 'user_id,endpoint' }
+        );
+      } catch (err) {
+        console.error('Push subscription failed:', err);
+      }
+    };
+
+    subscribe();
+  }, [user]);
+}
