@@ -8,7 +8,7 @@ const corsHeaders = {
 };
 
 const VAPID_PUBLIC_KEY =
-  "BGWS6V440AeIBkbjXbn1-LR9Qkag0ryitireNChNTKbxEou3qVxMGYfLrmkKM3oVuuxisVVC9WTZD4Xer2nrJSY";
+  "BLpic-q0e4n0laKNA6mGXy9kkgV8zoaLZAyJprnWXY0yNTNDN9Wwg_aIbpOJzz44rDLy8j6991XtSAQPLZ37KYQ";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -18,25 +18,12 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const vapidPrivateKey = Deno.env.get("VAPID_PRIVATE_KEY")!;
-
-    if (!vapidPrivateKey) {
-      return new Response(
-        JSON.stringify({ error: "VAPID_PRIVATE_KEY not set" }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Ensure key is proper URL-safe base64 without padding
-    const cleanPrivateKey = vapidPrivateKey.replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_").trim();
+    const vapidPrivateKey = "WTYJabyZljpaaRs8Axk0Hm_ftSruIxP-VARLg5laRUc";
 
     webpush.setVapidDetails(
       "mailto:noreply@easyflow.app",
       VAPID_PUBLIC_KEY,
-      cleanPrivateKey
+      vapidPrivateKey
     );
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
