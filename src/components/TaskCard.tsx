@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical, Pencil } from 'lucide-react';
+import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical, Pencil, Image } from 'lucide-react';
 import type { Task, Section, Visualization } from '@/lib/store';
 import CongratulateModal from './CongratulateModal';
 import ConfirmDialog from './ConfirmDialog';
@@ -10,7 +10,7 @@ interface TaskCardProps {
   section?: Section;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (id: string, updates: { title?: string; iconUrls?: string[] }) => void;
+  onEdit: (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null }) => void;
   onAddBandaid: (taskId: string, bandaid: string) => void;
   onRemoveBandaid: (taskId: string, index: number) => void;
   onAddProblem: (taskId: string, title: string, solution: string) => void;
@@ -34,6 +34,8 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editTime, setEditTime] = useState(task.reminderTime || '');
 
   // Confirm dialog state
   const [confirmAction, setConfirmAction] = useState<{ type: string; payload?: any } | null>(null);
@@ -155,7 +157,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
           })()}
 
           <div className="flex items-center gap-1 shrink-0">
-            <button onClick={() => { setEditing(true); setEditTitle(task.title); setShowIconPicker(false); }}
+            <button onClick={() => { setEditing(true); setEditTitle(task.title); setEditTime(task.reminderTime || ''); setShowIconPicker(false); setShowTimePicker(false); }}
               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               style={{ background: 'linear-gradient(135deg, hsl(200, 80%, 55%), hsl(220, 70%, 45%))', boxShadow: '0 0 6px hsla(200, 80%, 55%, 0.3)' }}
               title="Edit"
@@ -192,22 +194,59 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
 
         {/* Icon picker for editing */}
         <AnimatePresence>
-          {editing && stickers.length > 0 && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mt-2">
-              <p className="text-xs text-white/70 mb-1">Tap icons to add/remove:</p>
-              <div className="flex flex-wrap gap-1">
-                {stickers.map(s => {
-                  const selected = (task.iconUrls || []).includes(s.url);
-                  return (
-                    <button key={s.name} type="button" onClick={() => handleToggleIcon(s.url)}
-                      className={`w-8 h-8 rounded-lg p-1 border transition-all ${selected ? 'border-white scale-110' : 'border-white/20'}`}
-                      style={{ background: 'hsla(0,0%,100%,0.1)' }}
-                    >
-                      <img src={s.url} alt="" className="w-full h-full object-contain" />
-                    </button>
-                  );
-                })}
+          {editing && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mt-2 space-y-2">
+              {/* Time edit */}
+              <div className="flex items-center gap-2">
+                <Clock className="w-3.5 h-3.5 text-white/70" />
+                <input
+                  type="time"
+                  value={editTime}
+                  onChange={e => {
+                    setEditTime(e.target.value);
+                    onEdit(task.id, { reminderTime: e.target.value || null });
+                  }}
+                  className="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-sm text-white focus:outline-none focus:border-white/50"
+                />
+                {editTime && (
+                  <button onClick={() => { setEditTime(''); onEdit(task.id, { reminderTime: null }); }}
+                    className="text-white/50 hover:text-red-300 text-xs">Clear</button>
+                )}
+                <span className="text-[10px] text-white/50">Reminder</span>
               </div>
+
+              {/* PNG sticker toggle button */}
+              {stickers.length > 0 && (
+                <>
+                  <button
+                    onClick={() => setShowIconPicker(!showIconPicker)}
+                    className="flex items-center gap-1.5 text-xs text-white/70 hover:text-white transition-colors"
+                  >
+                    <Image className="w-3.5 h-3.5" />
+                    <span>{showIconPicker ? 'Hide' : 'Show'} Stickers</span>
+                    {showIconPicker ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                  </button>
+                  <AnimatePresence>
+                    {showIconPicker && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                        <div className="flex flex-wrap gap-1">
+                          {stickers.map(s => {
+                            const selected = (task.iconUrls || []).includes(s.url);
+                            return (
+                              <button key={s.name} type="button" onClick={() => handleToggleIcon(s.url)}
+                                className={`w-8 h-8 rounded-lg p-1 border transition-all ${selected ? 'border-white scale-110' : 'border-white/20'}`}
+                                style={{ background: 'hsla(0,0%,100%,0.1)' }}
+                              >
+                                <img src={s.url} alt="" className="w-full h-full object-contain" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

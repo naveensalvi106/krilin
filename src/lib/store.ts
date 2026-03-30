@@ -235,15 +235,32 @@ export function useAppStore() {
     setData(d => ({ ...d, tasks: d.tasks.filter(t => t.id !== id) }));
   }, []);
 
-  const editTask = useCallback(async (id: string, updates: { title?: string; iconUrls?: string[] }) => {
+  const editTask = useCallback(async (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null }) => {
     const dbUpdates: any = {};
     if (updates.title !== undefined) dbUpdates.title = updates.title;
     if (updates.iconUrls !== undefined) {
       dbUpdates.icon_urls = updates.iconUrls;
       dbUpdates.icon_url = updates.iconUrls[0] || null;
     }
+    if (updates.reminderTime !== undefined) {
+      if (updates.reminderTime) {
+        const [h, m] = updates.reminderTime.split(':').map(Number);
+        const now = new Date();
+        now.setHours(h, m, 0, 0);
+        dbUpdates.reminder_time = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
+      } else {
+        dbUpdates.reminder_time = null;
+      }
+    }
     await supabase.from('tasks').update(dbUpdates).eq('id', id);
-    setData(d => ({ ...d, tasks: d.tasks.map(t => t.id === id ? { ...t, ...updates } : t) }));
+    setData(d => ({
+      ...d,
+      tasks: d.tasks.map(t => t.id === id ? {
+        ...t,
+        ...updates,
+        ...(updates.reminderTime !== undefined ? { reminderTime: updates.reminderTime ? dbUpdates.reminder_time : undefined } : {}),
+      } : t),
+    }));
   }, []);
 
   const addSection = useCallback(async (section: Omit<Section, 'id'>) => {
