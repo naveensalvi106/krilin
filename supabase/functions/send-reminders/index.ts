@@ -36,8 +36,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Strip any Base64 padding characters that would cause VAPID validation failure
-    const cleanPrivateKey = vapidPrivateKey.trim().replace(/=+$/, '');
+    // Convert to URL-safe Base64: strip padding, replace +/ with -_
+    const cleanPrivateKey = vapidPrivateKey.trim()
+      .replace(/=+$/, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
     
     webpush.setVapidDetails(
       "mailto:noreply@example.com",
