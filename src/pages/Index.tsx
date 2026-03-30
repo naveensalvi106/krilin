@@ -147,6 +147,13 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="p-3 border-t border-border">
+                    <StickerManager
+                      stickers={stickers}
+                      loading={stickersLoading}
+                      onUpload={uploadSticker}
+                      onDelete={deleteSticker}
+                    />
+                  <div className="p-3 border-t border-border">
                     <button
                       onClick={signOut}
                       className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm hover:scale-[1.02] transition-transform"
@@ -194,7 +201,7 @@ const Index = () => {
           taskCounts={taskCounts}
         />
 
-        <AddTaskForm sections={store.sections} onAdd={store.addTask} />
+        <AddTaskForm sections={store.sections} stickers={stickers} onAdd={store.addTask} />
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
