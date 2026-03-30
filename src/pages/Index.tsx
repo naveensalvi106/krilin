@@ -50,6 +50,7 @@ const Index = () => {
   const touchStartY = useRef(0);
   const touchEndX = useRef(0);
   const touchEndY = useRef(0);
+  const touchMoved = useRef(false);
   const swipeBlocked = useRef(false);
 
   const handleDragStart = (id: string) => setDraggedId(id);
@@ -82,6 +83,7 @@ const Index = () => {
     touchStartY.current = touch.clientY;
     touchEndX.current = touch.clientX;
     touchEndY.current = touch.clientY;
+    touchMoved.current = false;
     swipeBlocked.current = isInteractiveTarget(e.target);
   };
 
@@ -89,10 +91,17 @@ const Index = () => {
     const touch = e.touches[0];
     touchEndX.current = touch.clientX;
     touchEndY.current = touch.clientY;
+
+    if (
+      Math.abs(touchEndX.current - touchStartX.current) > 6 ||
+      Math.abs(touchEndY.current - touchStartY.current) > 6
+    ) {
+      touchMoved.current = true;
+    }
   };
 
   const handleTouchEnd = () => {
-    if (swipeBlocked.current) return;
+    if (swipeBlocked.current || !touchMoved.current) return;
 
     const deltaX = touchStartX.current - touchEndX.current;
     const deltaY = Math.abs(touchStartY.current - touchEndY.current);
