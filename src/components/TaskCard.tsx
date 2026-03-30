@@ -54,26 +54,29 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
 
   const sectionColor = section?.color || '25 95% 53%';
   const hue = sectionColor.split(' ')[0];
+  const sat = sectionColor.split(' ')[1] || '80%';
 
   return (
     <>
       <motion.div
         layout
-        className={`relative rounded-2xl p-4 pl-5 space-y-3 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'shadow-2xl scale-[1.02]' : ''}`}
+        className={`relative rounded-2xl p-4 pl-5 space-y-3 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}
         style={{
-          background: `linear-gradient(135deg, hsl(${sectionColor} / 0.15), hsl(${sectionColor} / 0.05))`,
-          border: `1px solid hsl(${sectionColor} / 0.3)`,
+          background: `linear-gradient(145deg, hsl(${hue} ${sat} 18%), hsl(${hue} ${sat} 12%), hsl(${hue} ${sat} 8%))`,
+          border: `1px solid hsl(${hue} ${sat} 25%)`,
+          borderTop: `1px solid hsl(${hue} ${sat} 30%)`,
+          borderBottom: `1px solid hsl(${hue} ${sat} 6%)`,
           boxShadow: isDragging
-            ? `0 0 25px hsl(${sectionColor} / 0.4)`
-            : `0 0 12px hsl(${sectionColor} / 0.1)`,
+            ? `0 8px 32px hsl(${sectionColor} / 0.5), inset 0 1px 0 hsl(${hue} ${sat} 28%), inset 0 -1px 0 hsl(${hue} ${sat} 5%)`
+            : `0 4px 16px hsl(${sectionColor} / 0.2), 0 1px 3px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(${hue} ${sat} 28%), inset 0 -1px 0 hsl(${hue} ${sat} 5%)`,
         }}
       >
         {/* Left accent bar */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+          className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-2xl"
           style={{
-            background: `linear-gradient(180deg, hsl(${sectionColor}), hsl(${hue} 60% 35%))`,
-            boxShadow: `0 0 8px hsl(${sectionColor} / 0.5)`,
+            background: `linear-gradient(180deg, hsl(${hue} ${sat} 55%), hsl(${hue} ${sat} 35%))`,
+            boxShadow: `2px 0 8px hsl(${sectionColor} / 0.4)`,
           }}
         />
         <div className="flex items-center gap-3">
