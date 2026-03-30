@@ -176,6 +176,7 @@ export type Database = {
           problems: Json | null
           reminder_time: string | null
           section_id: string
+          sort_order: number
           title: string
           user_id: string
         }
@@ -187,6 +188,7 @@ export type Database = {
           problems?: Json | null
           reminder_time?: string | null
           section_id: string
+          sort_order?: number
           title: string
           user_id: string
         }
@@ -198,6 +200,7 @@ export type Database = {
           problems?: Json | null
           reminder_time?: string | null
           section_id?: string
+          sort_order?: number
           title?: string
           user_id?: string
         }
