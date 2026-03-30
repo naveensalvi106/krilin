@@ -95,7 +95,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
 
   return (
     <>
-      <motion.div layout className={`relative rounded-xl overflow-visible ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}>
+      <div className={`relative rounded-xl overflow-visible ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}>
         {/* Main card */}
         <div
           className="relative rounded-xl px-3 py-3 pl-5"
