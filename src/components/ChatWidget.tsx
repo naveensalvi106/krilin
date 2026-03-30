@@ -230,7 +230,8 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
                 )}
                 <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
                   <X className="w-4 h-4" />
-              </button>
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
