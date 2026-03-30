@@ -97,7 +97,7 @@ const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisu
                     <img
                       src={v.image}
                       alt="Vision"
-                      className="w-10 h-10 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform"
+                      className="max-w-[120px] max-h-[80px] rounded-lg object-contain cursor-pointer hover:scale-105 transition-transform"
                       onClick={() => setViewImg(v.image!)}
                     />
                   )}
@@ -127,8 +127,8 @@ const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisu
             {editing && (
               <div className="space-y-2">
                 {previewImg && (
-                  <div className="relative w-16 h-16">
-                    <img src={previewImg} alt="Preview" className="w-full h-full rounded-lg object-cover" />
+                  <div className="relative inline-block">
+                    <img src={previewImg} alt="Preview" className="max-w-[120px] max-h-[80px] rounded-lg object-contain" />
                     <button
                       onClick={() => setPreviewImg(null)}
                       className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center"
