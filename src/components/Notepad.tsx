@@ -123,7 +123,8 @@ const Notepad = () => {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="glass-panel-accent bevel w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"
+            className="w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden rounded-2xl border border-border"
+            style={{ background: 'hsl(15, 5%, 8%)' }}
             onClick={e => e.stopPropagation()}
           >
             <input type="file" ref={fileRef} className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
