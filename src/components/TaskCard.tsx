@@ -356,7 +356,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
             )}
           </AnimatePresence>
         </div>
-      </motion.div>
+      </div>
 
       <CongratulateModal
         open={showCongrats}
