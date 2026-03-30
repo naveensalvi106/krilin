@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { StickyNote, X, Plus, FolderOpen, ImagePlus, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import ConfirmDialog from './ConfirmDialog';
 
 interface NoteSection {
   id: string;
@@ -21,6 +22,7 @@ const Notepad = () => {
   const [showAddSection, setShowAddSection] = useState(false);
   const [viewImage, setViewImage] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<{ type: 'section' | 'image'; id?: string; index?: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -113,6 +115,13 @@ const Notepad = () => {
     });
   };
 
+  const handleConfirmRemove = () => {
+    if (!confirmRemove) return;
+    if (confirmRemove.type === 'section' && confirmRemove.id) removeSection(confirmRemove.id);
+    if (confirmRemove.type === 'image' && confirmRemove.index !== undefined) removeImage(confirmRemove.index);
+    setConfirmRemove(null);
+  };
+
   const modal = open ? createPortal(
     <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={() => setOpen(false)}>
       <div className="flex min-h-full items-start justify-center py-3 sm:items-center sm:py-4">
@@ -156,7 +165,7 @@ const Notepad = () => {
                 <FolderOpen className="w-3 h-3" />
                 {s.name}
                 {sections.length > 1 && (
-                  <button onClick={e => { e.stopPropagation(); removeSection(s.id); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                  <button onClick={e => { e.stopPropagation(); setConfirmRemove({ type: 'section', id: s.id }); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
                     <X className="w-3 h-3" />
                   </button>
                 )}
@@ -191,14 +200,9 @@ const Notepad = () => {
                   <div className="grid grid-cols-3 gap-2 mt-3">
                     {activeSection.images.map((img, i) => (
                       <div key={i} className="relative group">
-                        <img
-                          src={img}
-                          alt="Note"
-                          className="w-full h-24 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform"
-                          onClick={() => setViewImage(img)}
-                        />
+                        <img src={img} alt="Note" className="w-full h-24 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform" onClick={() => setViewImage(img)} />
                         <button
-                          onClick={() => removeImage(i)}
+                          onClick={() => setConfirmRemove({ type: 'image', index: i })}
                           className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                           style={{ background: 'hsl(0, 60%, 40%)' }}
                         >
@@ -211,6 +215,14 @@ const Notepad = () => {
               </>
             )}
           </div>
+
+          <ConfirmDialog
+            open={!!confirmRemove}
+            onConfirm={handleConfirmRemove}
+            onCancel={() => setConfirmRemove(null)}
+            title={confirmRemove?.type === 'section' ? 'Delete Section?' : 'Remove Image?'}
+            description={confirmRemove?.type === 'section' ? 'This will delete the section and all its notes.' : 'Are you sure you want to remove this image?'}
+          />
         </motion.div>
       </div>
     </div>,
