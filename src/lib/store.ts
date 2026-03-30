@@ -118,6 +118,7 @@ export function useAppStore() {
           bandaids: t.bandaids || [],
           problems: (t.problems as unknown as Problem[]) || [],
           reminderTime: t.reminder_time || undefined,
+          iconUrl: (t as any).icon_url || undefined,
           createdAt: t.created_at,
           sortOrder: (t as any).sort_order ?? 0,
         })).sort((a, b) => {
@@ -167,7 +168,6 @@ export function useAppStore() {
 
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'>) => {
     if (!user) return;
-    // Convert local reminder time to UTC for server-side matching
     let utcReminderTime: string | null = null;
     if (task.reminderTime) {
       const [h, m] = task.reminderTime.split(':').map(Number);
@@ -181,8 +181,9 @@ export function useAppStore() {
       section_id: task.sectionId,
       bandaids: task.bandaids,
       reminder_time: utcReminderTime,
+      icon_url: task.iconUrl || null,
       problems: [] as unknown as Json,
-    }).select().single();
+    } as any).select().single();
     if (inserted && !error) {
       const newTask: Task = {
         id: inserted.id,
@@ -192,6 +193,7 @@ export function useAppStore() {
         bandaids: inserted.bandaids || [],
         problems: [],
         reminderTime: inserted.reminder_time || undefined,
+        iconUrl: (inserted as any).icon_url || undefined,
         createdAt: inserted.created_at,
         sortOrder: (inserted as any).sort_order ?? 0,
       };
