@@ -72,8 +72,8 @@ const Index = () => {
   const currentTabIndex = allTabs.indexOf(activeTab);
 
   const isInteractiveTarget = (target: EventTarget | null) => {
-    if (!(target instanceof HTMLElement)) return false;
-    return !!target.closest('button, input, textarea, select, a, [role="button"], [data-no-swipe], [contenteditable="true"]');
+    if (!(target instanceof Element)) return false;
+    return !!target.closest('button, input, textarea, select, a, label, [role="button"], [role="dialog"], [data-no-swipe], [contenteditable="true"]');
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
