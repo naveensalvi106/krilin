@@ -60,7 +60,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
     <>
       <motion.div
         layout
-        className={`relative rounded-2xl p-4 pl-5 space-y-3 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}
+        className={`relative rounded-xl p-2.5 pl-4 space-y-1 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}
         style={{
           background: `linear-gradient(145deg, hsl(${hue} ${sat} 18%), hsl(${hue} ${sat} 12%), hsl(${hue} ${sat} 8%))`,
           border: `1px solid hsl(${hue} ${sat} 25%)`,
