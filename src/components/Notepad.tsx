@@ -119,14 +119,15 @@ const Notepad = () => {
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setOpen(false)}>
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden rounded-2xl border border-border"
-            style={{ background: 'hsl(15, 5%, 8%)' }}
-            onClick={e => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={() => setOpen(false)}>
+          <div className="flex min-h-full items-start justify-center py-3 sm:items-center sm:py-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="w-full max-w-lg h-[min(88vh,760px)] sm:h-[min(84vh,760px)] flex flex-col overflow-hidden rounded-2xl border border-border"
+              style={{ background: 'hsl(15, 5%, 8%)' }}
+              onClick={e => e.stopPropagation()}
+            >
             <input type="file" ref={fileRef} className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
 
             {/* Header */}
