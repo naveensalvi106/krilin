@@ -109,31 +109,31 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
             );
           })()}
 
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); }}
-              className="w-6 h-6 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
               title="Bandaids"
             >
-              <Bandage className="w-3 h-3" />
+              <Bandage className="w-3.5 h-3.5" />
             </button>
             <button onClick={() => { setShowProblems(!showProblems); setShowBandaids(false); }}
-              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               title="Problems"
               style={{
                 background: 'linear-gradient(135deg, hsl(45, 90%, 50%), hsl(30, 80%, 40%))',
                 boxShadow: '0 0 6px hsla(45, 90%, 50%, 0.3)',
               }}
             >
-              <AlertTriangle className="w-3 h-3" />
+              <AlertTriangle className="w-3.5 h-3.5" />
             </button>
             <button onClick={() => onDelete(task.id)}
-              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               style={{
                 background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 35%))',
                 boxShadow: '0 0 6px hsla(0, 80%, 50%, 0.3)',
               }}
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
