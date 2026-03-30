@@ -20,7 +20,7 @@ interface ConfirmDialogProps {
 const ConfirmDialog = ({ open, onConfirm, onCancel, title = 'Are you sure?', description = 'This action cannot be undone.' }: ConfirmDialogProps) => {
   return (
     <AlertDialog open={open} onOpenChange={(v) => !v && onCancel()}>
-      <AlertDialogContent style={{ background: 'linear-gradient(145deg, hsl(45, 90%, 25%), hsl(35, 80%, 18%))', border: '1px solid hsl(45, 80%, 35%)' }}>
+      <AlertDialogContent style={{ background: 'linear-gradient(145deg, hsl(45, 90%, 25%), hsl(35, 80%, 18%))', border: '1px solid hsl(45, 80%, 35%)', zIndex: 99999 }} className="z-[99999]">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-foreground">{title}</AlertDialogTitle>
           <AlertDialogDescription className="text-foreground/70">{description}</AlertDialogDescription>
