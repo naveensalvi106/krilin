@@ -18,6 +18,7 @@ export interface Task {
   problems: Problem[];
   reminderTime?: string;
   createdAt: string;
+  sortOrder: number;
 }
 
 export interface Section {
@@ -117,7 +118,8 @@ export function useAppStore() {
           problems: (t.problems as unknown as Problem[]) || [],
           reminderTime: t.reminder_time || undefined,
           createdAt: t.created_at,
-        })),
+          sortOrder: (t as any).sort_order ?? 0,
+        })).sort((a, b) => a.sortOrder - b.sortOrder),
         sections: dbSections.length > 0 ? dbSections : DEFAULT_SECTIONS,
         streaks: [],
         revivalVideos: (videosRes.data || []).map(v => ({
@@ -186,6 +188,7 @@ export function useAppStore() {
         problems: [],
         reminderTime: inserted.reminder_time || undefined,
         createdAt: inserted.created_at,
+        sortOrder: (inserted as any).sort_order ?? 0,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
     }
