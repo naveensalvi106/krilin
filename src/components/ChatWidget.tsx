@@ -74,6 +74,13 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             }
           }
           if (deleted > 0) toast.success(`Deleted ${deleted} task(s)!`);
+        } else if (tc.function.name === 'delete_all_tasks') {
+          const scope = args.section_id;
+          const toDelete = scope ? tasks.filter(t => t.sectionId === scope) : [...tasks];
+          for (const t of toDelete) {
+            await onDeleteTask(t.id);
+          }
+          toast.success(`Deleted ${toDelete.length} task(s)!`);
         }
       } catch (err) {
         console.error('Tool call error:', err);
@@ -99,6 +106,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
         body: JSON.stringify({
           messages: [...messages, userMsg],
           sections: sections.map(s => ({ id: s.id, name: s.name })),
+          tasks: tasks.map(t => ({ title: t.title, section_id: t.sectionId, completed: t.completed })),
         }),
       });
 

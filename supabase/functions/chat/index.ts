@@ -9,11 +9,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { messages, sections } = await req.json();
+    const { messages, sections, tasks } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const sectionList = (sections || []).map((s: any) => `- "${s.name}" (id: ${s.id})`).join("\n");
+
+    const taskList = (tasks || []).length > 0
+      ? (tasks || []).map((t: any) => `- "${t.title}" [section: ${t.section_id}] ${t.completed ? '✅' : '⬜'}`).join("\n")
+      : "No tasks yet.";
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -26,24 +30,30 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are an AI assistant inside EasyFlow, a personal task & habit tracker app. You can help users by:
+            content: `You are EasyFlow AI — a smart, efficient personal productivity assistant built into the EasyFlow task tracker app. You think like a real AI assistant (like Gemini or ChatGPT). You are sharp, context-aware, and proactive.
 
-1. **Adding tasks**: When asked to add tasks or plan a day, use the add_tasks tool. Always pick the most relevant section from available sections.
-2. **Motivation & coaching**: Be calm, empathetic, direct. Use short sentences. Celebrate small wins.
-3. **Day planning**: When asked to plan a day, create a structured set of tasks across relevant sections.
-4. **Emergency support**: If someone is struggling, be grounding. Offer breathing exercises, 5-4-3-2-1 technique.
+## Your capabilities:
+1. **Task management**: Add, complete, delete tasks. You can delete ALL tasks at once — no need to ask for titles.
+2. **Day planning**: Create structured daily plans with tasks across sections.
+3. **Motivation**: Be direct, warm, and encouraging. Celebrate wins. No fluff.
+4. **Smart context**: You can SEE all current tasks below. Use this to answer questions like "how many tasks do I have?", "what's left?", "remove all tasks", etc.
 
-Available sections:
+## Available sections:
 ${sectionList}
 
-Rules:
-- When adding tasks, ALWAYS use the add_tasks tool - never just describe tasks in text.
-- Pick the best matching section_id for each task.
-- If no section fits well, use the first available section.
-- Keep task titles short and actionable (2-6 words).
-- After adding tasks, briefly confirm what you added.
+## Current tasks:
+${taskList}
+
+## Rules:
+- You have FULL CONTEXT of the user's tasks. Never ask "which tasks?" or "what are their titles?" — you can see them.
+- When user says "remove all tasks" or "delete everything" → use delete_all_tasks tool immediately. Don't ask for confirmation.
+- When user says "remove/delete [specific task]" → use delete_tasks with the matching title from the list above.
+- When user says "complete [task]" → use complete_tasks with the matching title.
+- When adding tasks, ALWAYS use add_tasks tool. Pick the best section. Keep titles short (2-6 words).
+- Be concise: 1-3 sentences max unless asked for detail.
+- Be smart: infer intent. If user says "clear my list", that means delete all. If they say "I finished meditation", complete it.
 - You are NOT a therapist. For serious crises, recommend 988 Suicide & Crisis Lifeline.
-- Max 3-4 sentences unless asked for more.`
+- Sound natural and intelligent. No robotic responses.`
           },
           ...messages,
         ],
@@ -52,7 +62,7 @@ Rules:
             type: "function",
             function: {
               name: "add_tasks",
-              description: "Add one or more tasks to the user's task list in the app",
+              description: "Add one or more tasks to the user's task list",
               parameters: {
                 type: "object",
                 properties: {
@@ -77,14 +87,14 @@ Rules:
             type: "function",
             function: {
               name: "complete_tasks",
-              description: "Mark tasks as completed by their titles (fuzzy match)",
+              description: "Mark tasks as completed by their titles (fuzzy match). Use when user says they finished specific tasks.",
               parameters: {
                 type: "object",
                 properties: {
                   task_titles: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Titles of tasks to mark as complete",
+                    description: "Titles of tasks to mark as complete (from the current tasks list)",
                   },
                 },
                 required: ["task_titles"],
@@ -95,17 +105,33 @@ Rules:
             type: "function",
             function: {
               name: "delete_tasks",
-              description: "Delete tasks by their titles (fuzzy match)",
+              description: "Delete specific tasks by their titles (fuzzy match)",
               parameters: {
                 type: "object",
                 properties: {
                   task_titles: {
                     type: "array",
                     items: { type: "string" },
-                    description: "Titles of tasks to delete",
+                    description: "Titles of tasks to delete (from the current tasks list)",
                   },
                 },
                 required: ["task_titles"],
+              },
+            },
+          },
+          {
+            type: "function",
+            function: {
+              name: "delete_all_tasks",
+              description: "Delete ALL tasks at once, or all tasks in a specific section. Use when user says 'remove all', 'clear everything', 'delete all tasks', etc.",
+              parameters: {
+                type: "object",
+                properties: {
+                  section_id: {
+                    type: "string",
+                    description: "Optional: section ID to delete tasks from. If omitted, deletes ALL tasks across all sections.",
+                  },
+                },
               },
             },
           },
