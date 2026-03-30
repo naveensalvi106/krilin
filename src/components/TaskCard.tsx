@@ -4,6 +4,7 @@ import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRigh
 import type { Task, Section, Visualization } from '@/lib/store';
 import CongratulateModal from './CongratulateModal';
 import ConfirmDialog from './ConfirmDialog';
+import { playComplete, playUncomplete, playDelete, playOpen, playClose, playClick } from '@/lib/sounds';
 
 interface TaskCardProps {
   task: Task;
@@ -43,6 +44,9 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
   const handleToggle = () => {
     if (!task.completed) {
       setShowCongrats(true);
+      playComplete();
+    } else {
+      playUncomplete();
     }
     onToggle(task.id);
   };
@@ -51,6 +55,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
     if (newBandaid.trim()) {
       onAddBandaid(task.id, newBandaid.trim());
       setNewBandaid('');
+      playClick();
     }
   };
 
@@ -59,13 +64,14 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
       onAddProblem(task.id, newProblemTitle.trim(), newProblemSolution.trim());
       setNewProblemTitle('');
       setNewProblemSolution('');
+      playClick();
     }
   };
 
   const handleConfirm = () => {
     if (!confirmAction) return;
     switch (confirmAction.type) {
-      case 'deleteTask': onDelete(task.id); break;
+      case 'deleteTask': onDelete(task.id); playDelete(); break;
       case 'removeBandaid': onRemoveBandaid(task.id, confirmAction.payload); break;
       case 'removeProblem': onRemoveProblem(task.id, confirmAction.payload); break;
       case 'removeVisualization': onRemoveVisualization(confirmAction.payload); break;
@@ -164,7 +170,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                 if (editing) {
                   handleSaveEdit();
                 } else {
-                  setEditing(true); setEditTitle(task.title); setEditTime(task.reminderTime || ''); setShowIconPicker(false);
+                  setEditing(true); setEditTitle(task.title); setEditTime(task.reminderTime || ''); setShowIconPicker(false); playOpen();
                   setShowBandaids(false); setShowProblems(false);
                 }
               }}
@@ -176,13 +182,13 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
               </button>
               {!editing && (
                 <>
-                  <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); setEditing(false); }}
+                  <button onClick={() => { const opening = !showBandaids; setShowBandaids(opening); setShowProblems(false); setEditing(false); opening ? playOpen() : playClose(); }}
                     className="w-7 h-7 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
                     title="Bandaids"
                   >
                     <Bandage className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => { setShowProblems(!showProblems); setShowBandaids(false); setEditing(false); }}
+                  <button onClick={() => { const opening = !showProblems; setShowProblems(opening); setShowBandaids(false); setEditing(false); opening ? playOpen() : playClose(); }}
                     className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
                     title="Problems"
                     style={{
