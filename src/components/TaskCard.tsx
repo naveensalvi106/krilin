@@ -60,7 +60,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
     <>
       <motion.div
         layout
-        className={`relative rounded-xl px-2.5 py-2 pl-4 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}
+        className={`relative rounded-xl px-3 py-3 pl-5 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}
         style={{
           background: `linear-gradient(145deg, hsl(${hue} ${sat} 18%), hsl(${hue} ${sat} 12%), hsl(${hue} ${sat} 8%))`,
           border: `1px solid hsl(${hue} ${sat} 25%)`,
@@ -80,17 +80,17 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
           }}
         />
         {/* Single row: drag + check + icon + title + reminder + actions */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-2">
           <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors shrink-0">
-            <GripVertical className="w-3.5 h-3.5" />
+            <GripVertical className="w-4 h-4" />
           </div>
-          <button onClick={handleToggle} className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground hover:border-primary'}`}>
-            {task.completed && <Check className="w-3 h-3 text-primary-foreground" />}
+          <button onClick={handleToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground hover:border-primary'}`}>
+            {task.completed && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
           </button>
           {task.iconUrl && (
-            <img src={task.iconUrl} alt="" className="w-4 h-4 object-contain shrink-0" />
+            <img src={task.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
           )}
-          <span className={`flex-1 font-medium text-sm min-w-0 truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+          <span className={`flex-1 font-medium text-[15px] min-w-0 truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
             {task.title}
           </span>
 
@@ -109,31 +109,31 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
             );
           })()}
 
-          <div className="flex items-center gap-0.5 shrink-0">
+          <div className="flex items-center gap-1 shrink-0">
             <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); }}
-              className="w-6 h-6 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
               title="Bandaids"
             >
-              <Bandage className="w-3 h-3" />
+              <Bandage className="w-3.5 h-3.5" />
             </button>
             <button onClick={() => { setShowProblems(!showProblems); setShowBandaids(false); }}
-              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               title="Problems"
               style={{
                 background: 'linear-gradient(135deg, hsl(45, 90%, 50%), hsl(30, 80%, 40%))',
                 boxShadow: '0 0 6px hsla(45, 90%, 50%, 0.3)',
               }}
             >
-              <AlertTriangle className="w-3 h-3" />
+              <AlertTriangle className="w-3.5 h-3.5" />
             </button>
             <button onClick={() => onDelete(task.id)}
-              className="w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               style={{
                 background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 35%))',
                 boxShadow: '0 0 6px hsla(0, 80%, 50%, 0.3)',
               }}
             >
-              <X className="w-3 h-3" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
