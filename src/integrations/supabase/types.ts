@@ -172,6 +172,7 @@ export type Database = {
           bandaids: string[] | null
           completed: boolean
           created_at: string
+          icon_url: string | null
           id: string
           problems: Json | null
           reminder_time: string | null
@@ -184,6 +185,7 @@ export type Database = {
           bandaids?: string[] | null
           completed?: boolean
           created_at?: string
+          icon_url?: string | null
           id?: string
           problems?: Json | null
           reminder_time?: string | null
@@ -196,6 +198,7 @@ export type Database = {
           bandaids?: string[] | null
           completed?: boolean
           created_at?: string
+          icon_url?: string | null
           id?: string
           problems?: Json | null
           reminder_time?: string | null

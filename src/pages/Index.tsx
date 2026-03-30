@@ -10,6 +10,7 @@ import RevivalProtocol from '@/components/RevivalProtocol';
 import SectionNav from '@/components/SectionNav';
 import Notepad from '@/components/Notepad';
 import ChatWidget from '@/components/ChatWidget';
+import StickerManager, { useStickers } from '@/components/StickerManager';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
 
@@ -18,6 +19,7 @@ const Index = () => {
   const { user, signOut } = useAuth();
   useTaskReminders(store.tasks);
   usePushSubscription();
+  const { stickers, loading: stickersLoading, uploadSticker, deleteSticker } = useStickers();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -145,6 +147,14 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="p-3 border-t border-border">
+                    <StickerManager
+                      stickers={stickers}
+                      loading={stickersLoading}
+                      onUpload={uploadSticker}
+                      onDelete={deleteSticker}
+                    />
+                  </div>
+                  <div className="p-3 border-t border-border">
                     <button
                       onClick={signOut}
                       className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm hover:scale-[1.02] transition-transform"
@@ -192,7 +202,7 @@ const Index = () => {
           taskCounts={taskCounts}
         />
 
-        <AddTaskForm sections={store.sections} onAdd={store.addTask} />
+        <AddTaskForm sections={store.sections} stickers={stickers} onAdd={store.addTask} />
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
