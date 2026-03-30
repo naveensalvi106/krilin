@@ -218,62 +218,36 @@ const Index = () => {
           );
         })()}
 
-        {/* Tab Bar: All Tasks + Custom Sections + Plus */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-          <button
-            onClick={() => setActiveTab(null)}
-            className="px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0"
-            style={activeTab === null ? {
-              background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
-              color: 'white',
-              boxShadow: '0 0 20px hsl(35 100% 50% / 0.4), inset 0 1px 0 hsl(50 100% 70% / 0.3)',
-            } : {
-              background: 'hsl(15, 10%, 12%)',
-              border: '1px solid hsl(15, 15%, 20%)',
-              color: 'hsl(25, 10%, 55%)',
-            }}
-          >
-            All Tasks
-          </button>
-
-          {store.customSections.map((cs, idx) => {
-            const color = SECTION_COLORS[idx % SECTION_COLORS.length];
-            const hue = color.split(' ')[0];
-            const sat = color.split(' ')[1];
-            const isActive = activeTab === cs.id;
-            return (
-              <button
-                key={cs.id}
-                onClick={() => setActiveTab(cs.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0"
-                style={isActive ? {
-                  background: `linear-gradient(135deg, hsl(${hue} ${sat} 55%), hsl(${hue} ${sat} 40%))`,
-                  color: 'white',
-                  boxShadow: `0 0 20px hsl(${hue} ${sat} 50% / 0.4), inset 0 1px 0 hsl(${hue} ${sat} 70% / 0.3)`,
-                } : {
-                  background: 'hsl(15, 10%, 12%)',
-                  border: '1px solid hsl(15, 15%, 20%)',
-                  color: 'hsl(25, 10%, 55%)',
-                }}
-              >
-                {cs.iconUrl && <img src={cs.iconUrl} alt="" className="w-5 h-5 object-contain rounded" />}
-                {cs.name}
-              </button>
-            );
-          })}
-
-          {/* Plus button to add section */}
-          <button
-            onClick={() => setShowAddSection(true)}
-            className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 hover:scale-110 transition-transform"
-            style={{
-              background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
-              boxShadow: '0 0 15px hsl(35 100% 50% / 0.3)',
-            }}
-          >
-            <Plus className="w-5 h-5 text-white" />
-          </button>
-        </div>
+        {/* Section tabs - only custom sections + plus button (no "All Tasks" tab) */}
+        {store.customSections.length > 0 && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {store.customSections.map((cs, idx) => {
+              const color = SECTION_COLORS[idx % SECTION_COLORS.length];
+              const hue = color.split(' ')[0];
+              const sat = color.split(' ')[1];
+              const isActive = activeTab === cs.id;
+              return (
+                <button
+                  key={cs.id}
+                  onClick={() => setActiveTab(isActive ? null : cs.id)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-all shrink-0"
+                  style={isActive ? {
+                    background: `linear-gradient(135deg, hsl(${hue} ${sat} 55%), hsl(${hue} ${sat} 40%))`,
+                    color: 'white',
+                    boxShadow: `0 0 20px hsl(${hue} ${sat} 50% / 0.4), inset 0 1px 0 hsl(${hue} ${sat} 70% / 0.3)`,
+                  } : {
+                    background: 'hsl(15, 10%, 12%)',
+                    border: '1px solid hsl(15, 15%, 20%)',
+                    color: 'hsl(25, 10%, 55%)',
+                  }}
+                >
+                  {cs.iconUrl && <img src={cs.iconUrl} alt="" className="w-5 h-5 object-contain rounded" />}
+                  {cs.name}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {/* Add Section Modal */}
         <input type="file" ref={fileRef} className="hidden" accept="image/png,image/jpeg,image/webp" onChange={handleIconUpload} />
@@ -308,7 +282,20 @@ const Index = () => {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h2 className="font-display text-sm text-gradient-fire">All Tasks</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-display text-sm text-gradient-fire">All Tasks</h2>
+                  <button
+                    onClick={() => setShowAddSection(true)}
+                    className="w-6 h-6 rounded-lg flex items-center justify-center hover:scale-110 transition-transform"
+                    style={{
+                      background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
+                      boxShadow: '0 0 10px hsl(35 100% 50% / 0.3)',
+                    }}
+                    title="Add Section"
+                  >
+                    <Plus className="w-3.5 h-3.5 text-white" />
+                  </button>
+                </div>
                 <span className="text-xs text-muted-foreground">{store.completedCount}/{store.totalCount} done</span>
               </div>
 
