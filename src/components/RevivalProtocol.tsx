@@ -76,11 +76,11 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
       onClick={() => { setActive(true); playOpen(); }}
         className="w-full rounded-xl p-5 flex items-center gap-4 group transition-all hover:scale-[1.01]"
         style={{
-          background: 'linear-gradient(145deg, hsl(0, 85%, 55%), hsl(350, 70%, 38%), hsl(0, 0%, 12%))',
-          border: '1px solid hsl(0, 80%, 60%)',
-          borderTop: '1px solid hsl(0, 90%, 68%)',
-          borderBottom: '1px solid hsl(0, 0%, 8%)',
-          boxShadow: '0 4px 16px hsl(0, 80%, 45% / 0.4), 0 1px 3px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(0, 85%, 72%), inset 0 -1px 0 hsl(0, 0%, 6%)',
+          background: 'linear-gradient(145deg, hsl(0, 90%, 58%), hsl(355, 75%, 42%), hsl(0, 0%, 15%))',
+          border: '2px solid hsl(0, 70%, 50%)',
+          borderTop: '2px solid hsl(0, 100%, 72%)',
+          borderBottom: '2px solid hsl(0, 0%, 6%)',
+          boxShadow: '0 8px 24px hsl(0, 80%, 40% / 0.5), 0 2px 4px hsl(0 0% 0% / 0.4), inset 0 2px 0 hsl(0, 100%, 78%), inset 0 -2px 0 hsl(0, 0%, 4%), inset 2px 0 0 hsl(0, 85%, 65%), inset -2px 0 0 hsl(0, 0%, 10%)',
         }}
       >
         <ShieldAlert className="w-6 h-6 text-white drop-shadow-lg" />
@@ -96,11 +96,11 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
     <div
       className="rounded-xl p-5 space-y-5"
       style={{
-        background: 'linear-gradient(145deg, hsl(0, 85%, 55%), hsl(350, 70%, 38%), hsl(0, 0%, 12%))',
-        border: '1px solid hsl(0, 80%, 60%)',
-        borderTop: '1px solid hsl(0, 90%, 68%)',
-        borderBottom: '1px solid hsl(0, 0%, 8%)',
-        boxShadow: '0 6px 24px hsl(0, 80%, 45% / 0.4), 0 2px 6px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(0, 85%, 72%), inset 0 -1px 0 hsl(0, 0%, 6%)',
+        background: 'linear-gradient(145deg, hsl(0, 90%, 58%), hsl(355, 75%, 42%), hsl(0, 0%, 15%))',
+        border: '2px solid hsl(0, 70%, 50%)',
+        borderTop: '2px solid hsl(0, 100%, 72%)',
+        borderBottom: '2px solid hsl(0, 0%, 6%)',
+        boxShadow: '0 10px 30px hsl(0, 80%, 40% / 0.5), 0 3px 6px hsl(0 0% 0% / 0.4), inset 0 2px 0 hsl(0, 100%, 78%), inset 0 -2px 0 hsl(0, 0%, 4%), inset 2px 0 0 hsl(0, 85%, 65%), inset -2px 0 0 hsl(0, 0%, 10%)',
       }}
     >
       <div className="flex items-center justify-between">
