@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Section, Task } from '@/lib/store';
+import ConfirmDialog from './ConfirmDialog';
+import { playOpen, playClose, playSend, playReceive, playWarning, playClick } from '@/lib/sounds';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 

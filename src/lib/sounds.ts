@@ -170,3 +170,136 @@ export function playClick() {
   osc.start(now);
   osc.stop(now + 0.05);
 }
+
+// Send message — quick swoosh up
+export function playSend() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(400, now);
+  osc.frequency.exponentialRampToValueAtTime(1200, now + 0.1);
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.18);
+}
+
+// Receive message — gentle bubble pop
+export function playReceive() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [660, 880].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+    gain.gain.setValueAtTime(0, now + i * 0.08);
+    gain.gain.linearRampToValueAtTime(0.1, now + i * 0.08 + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + i * 0.08);
+    osc.stop(now + i * 0.08 + 0.25);
+  });
+}
+
+// Toggle on — bright ding
+export function playToggleOn() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(1100, now);
+  gain.gain.setValueAtTime(0.12, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.18);
+}
+
+// Toggle off — soft low note
+export function playToggleOff() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(500, now);
+  osc.frequency.exponentialRampToValueAtTime(350, now + 0.1);
+  gain.gain.setValueAtTime(0.1, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.15);
+}
+
+// Success — warm confirmation chord
+export function playSuccess() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [523.25, 659.25, 783.99].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.45);
+  });
+}
+
+// Warning / confirm — two low tones
+export function playWarning() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  [300, 250].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(freq, now + i * 0.15);
+    gain.gain.setValueAtTime(0.15, now + i * 0.15);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.15 + 0.2);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + i * 0.15);
+    osc.stop(now + i * 0.15 + 0.25);
+  });
+}
+
+// Typing tick — very subtle
+export function playTick() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.setValueAtTime(800, now);
+  gain.gain.setValueAtTime(0.03, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.02);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.03);
+}
+
+// Revival survived — epic fanfare
+export function playSurvived() {
+  const ctx = getCtx();
+  const now = ctx.currentTime;
+  const notes = [392, 523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = i < 3 ? 'triangle' : 'sine';
+    osc.frequency.setValueAtTime(freq, now + i * 0.12);
+    gain.gain.setValueAtTime(0, now + i * 0.12);
+    gain.gain.linearRampToValueAtTime(0.18, now + i * 0.12 + 0.03);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.12 + 0.6);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + i * 0.12);
+    osc.stop(now + i * 0.12 + 0.65);
+  });
+}
