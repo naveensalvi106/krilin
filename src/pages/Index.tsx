@@ -13,6 +13,7 @@ import StickerManager, { useStickers } from '@/components/StickerManager';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
+import { playTab, playOpen, playClick, playDelete, playAddTask } from '@/lib/sounds';
 
 const Index = () => {
   const store = useAppStore();
@@ -162,7 +163,7 @@ const Index = () => {
           <div className="flex items-center gap-0 overflow-x-auto pb-1 scrollbar-none">
             <h2
               className={`font-display text-sm whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 transition-colors ${activeTab === null ? 'text-gradient-fire border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              onClick={() => setActiveTab(null)}
+              onClick={() => { setActiveTab(null); playTab(); }}
             >
               All Tasks
             </h2>
@@ -173,13 +174,13 @@ const Index = () => {
                 <div className="flex items-center gap-1 shrink-0">
                   <h2
                     className={`font-display text-sm whitespace-nowrap cursor-pointer px-2 py-1 transition-colors ${cs.id === activeTab ? 'text-gradient-fire border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                    onClick={() => setActiveTab(cs.id)}
+                      onClick={() => { setActiveTab(cs.id); playTab(); }}
                   >
                     {cs.name}
                   </h2>
                   {cs.id === activeTab && (
                     <button
-                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(cs.id); }}
+                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(cs.id); playClick(); }}
                       className="w-4 h-4 rounded-full flex items-center justify-center hover:scale-125 transition-transform"
                       style={{ background: 'hsl(0 60% 40%)' }}
                     >
@@ -202,12 +203,12 @@ const Index = () => {
                   placeholder="Section name..."
                   className="w-28 bg-transparent border-b border-primary text-foreground placeholder:text-muted-foreground text-sm focus:outline-none px-1 py-0.5"
                 />
-                <button onClick={handleCreateSection} className="text-xs text-primary font-medium hover:scale-105 transition-transform">Add</button>
+                <button onClick={() => { handleCreateSection(); playAddTask(); }} className="text-xs text-primary font-medium hover:scale-105 transition-transform">Add</button>
                 <button onClick={() => { setShowAddSection(false); setNewSectionName(''); }} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
               </div>
             ) : (
               <button
-                onClick={() => setShowAddSection(true)}
+                onClick={() => { setShowAddSection(true); playOpen(); }}
                 className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 hover:scale-110 transition-transform ml-1"
                 style={{
                   background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
@@ -265,7 +266,7 @@ const Index = () => {
         open={!!confirmDeleteSection}
         onConfirm={() => {
           if (confirmDeleteSection) {
-            store.deleteCustomSection(confirmDeleteSection);
+            store.deleteCustomSection(confirmDeleteSection); playDelete();
             if (activeTab === confirmDeleteSection) setActiveTab(null);
           }
           setConfirmDeleteSection(null);
