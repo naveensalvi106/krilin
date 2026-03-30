@@ -20,6 +20,7 @@ export interface Task {
   iconUrls: string[];
   createdAt: string;
   sortOrder: number;
+  customSectionId?: string;
 }
 
 export interface Section {
@@ -27,6 +28,12 @@ export interface Section {
   name: string;
   icon: string;
   color: string;
+}
+
+export interface CustomSection {
+  id: string;
+  name: string;
+  iconUrl?: string;
 }
 
 export interface DayStreak {
@@ -67,6 +74,7 @@ export const DEFAULT_SECTIONS: Section[] = [
 interface AppData {
   tasks: Task[];
   sections: Section[];
+  customSections: CustomSection[];
   streaks: DayStreak[];
   revivalVideos: RevivalVideo[];
   revivalSteps: RevivalStep[];
@@ -76,6 +84,7 @@ interface AppData {
 const EMPTY_DATA: AppData = {
   tasks: [],
   sections: DEFAULT_SECTIONS,
+  customSections: [],
   streaks: [],
   revivalVideos: [],
   revivalSteps: [],
@@ -95,25 +104,26 @@ export function useAppStore() {
     }
 
     const load = async () => {
-      const [tasksRes, sectionsRes, visRes, videosRes, stepsRes] = await Promise.all([
+      const [tasksRes, sectionsRes, customSectionsRes, visRes, videosRes, stepsRes] = await Promise.all([
         supabase.from('tasks').select('*').eq('user_id', user.id),
         supabase.from('sections').select('*').eq('user_id', user.id),
+        supabase.from('custom_sections' as any).select('*').eq('user_id', user.id),
         supabase.from('visualizations').select('*').eq('user_id', user.id),
         supabase.from('revival_videos').select('*').eq('user_id', user.id),
         supabase.from('revival_steps').select('*').eq('user_id', user.id).order('step'),
       ]);
 
       const dbSections = (sectionsRes.data || []).map(s => ({
-        id: s.id,
-        name: s.name,
-        icon: s.icon,
-        color: s.color,
+        id: s.id, name: s.name, icon: s.icon, color: s.color,
+      }));
+
+      const dbCustomSections = ((customSectionsRes.data as any[]) || []).map((cs: any) => ({
+        id: cs.id, name: cs.name, iconUrl: cs.icon_url || undefined,
       }));
 
       setData({
         tasks: (tasksRes.data || []).map(t => {
           const raw = t as any;
-          // Support both icon_urls array and legacy icon_url
           let iconUrls: string[] = [];
           if (raw.icon_urls && Array.isArray(raw.icon_urls) && raw.icon_urls.length > 0) {
             iconUrls = raw.icon_urls.filter(Boolean);
@@ -121,40 +131,21 @@ export function useAppStore() {
             iconUrls = [raw.icon_url];
           }
           return {
-            id: t.id,
-            title: t.title,
-            sectionId: t.section_id,
-            completed: t.completed,
-            bandaids: t.bandaids || [],
-            problems: (t.problems as unknown as Problem[]) || [],
-            reminderTime: t.reminder_time || undefined,
-            iconUrls,
-            createdAt: t.created_at,
-            sortOrder: raw.sort_order ?? 0,
+            id: t.id, title: t.title, sectionId: t.section_id, completed: t.completed,
+            bandaids: t.bandaids || [], problems: (t.problems as unknown as Problem[]) || [],
+            reminderTime: t.reminder_time || undefined, iconUrls, createdAt: t.created_at,
+            sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
           };
         }).sort((a, b) => {
           if (a.completed !== b.completed) return a.completed ? 1 : -1;
           return a.sortOrder - b.sortOrder;
         }),
         sections: dbSections.length > 0 ? dbSections : DEFAULT_SECTIONS,
+        customSections: dbCustomSections,
         streaks: [],
-        revivalVideos: (videosRes.data || []).map(v => ({
-          id: v.id,
-          title: v.title,
-          url: v.url,
-          channel: v.channel,
-        })),
-        revivalSteps: (stepsRes.data || []).map(s => ({
-          id: s.id,
-          step: s.step,
-          text: s.text,
-        })),
-        visualizations: (visRes.data || []).map(v => ({
-          id: v.id,
-          text: v.text,
-          image: v.image || undefined,
-          taskId: (v as any).task_id || undefined,
-        })),
+        revivalVideos: (videosRes.data || []).map(v => ({ id: v.id, title: v.title, url: v.url, channel: v.channel })),
+        revivalSteps: (stepsRes.data || []).map(s => ({ id: s.id, step: s.step, text: s.text })),
+        visualizations: (visRes.data || []).map(v => ({ id: v.id, text: v.text, image: v.image || undefined, taskId: (v as any).task_id || undefined })),
       });
       setLoaded(true);
     };
@@ -165,15 +156,14 @@ export function useAppStore() {
       .channel('app-realtime-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sections', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'custom_sections', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'visualizations', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'revival_videos', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'revival_steps', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'notepad_sections', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   useEffect(() => {
@@ -191,6 +181,9 @@ export function useAppStore() {
     seedSections();
   }, [user, loaded]);
 
+  // --- Main tasks (exclude custom section tasks) ---
+  const mainTasks = data.tasks.filter(t => !t.customSectionId);
+
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'>) => {
     if (!user) return;
     let utcReminderTime: string | null = null;
@@ -201,28 +194,17 @@ export function useAppStore() {
       utcReminderTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
     }
     const { data: inserted, error } = await supabase.from('tasks').insert({
-      user_id: user.id,
-      title: task.title,
-      section_id: task.sectionId,
-      bandaids: task.bandaids,
-      reminder_time: utcReminderTime,
-      icon_url: task.iconUrls?.[0] || null,
-      icon_urls: task.iconUrls || [],
-      problems: [] as unknown as Json,
+      user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
+      reminder_time: utcReminderTime, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
+      problems: [] as unknown as Json, custom_section_id: task.customSectionId || null,
     } as any).select().single();
     if (inserted && !error) {
       const raw = inserted as any;
       const newTask: Task = {
-        id: inserted.id,
-        title: inserted.title,
-        sectionId: inserted.section_id,
-        completed: inserted.completed,
-        bandaids: inserted.bandaids || [],
-        problems: [],
-        reminderTime: inserted.reminder_time || undefined,
-        iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []),
-        createdAt: inserted.created_at,
-        sortOrder: raw.sort_order ?? 0,
+        id: inserted.id, title: inserted.title, sectionId: inserted.section_id, completed: inserted.completed,
+        bandaids: inserted.bandaids || [], problems: [], reminderTime: inserted.reminder_time || undefined,
+        iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []), createdAt: inserted.created_at,
+        sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
     }
@@ -256,10 +238,7 @@ export function useAppStore() {
       dbUpdates.icon_url = updates.iconUrls[0] || null;
     }
     await supabase.from('tasks').update(dbUpdates).eq('id', id);
-    setData(d => ({
-      ...d,
-      tasks: d.tasks.map(t => t.id === id ? { ...t, ...updates } : t),
-    }));
+    setData(d => ({ ...d, tasks: d.tasks.map(t => t.id === id ? { ...t, ...updates } : t) }));
   }, []);
 
   const addSection = useCallback(async (section: Omit<Section, 'id'>) => {
@@ -271,6 +250,38 @@ export function useAppStore() {
       setData(d => ({ ...d, sections: [...d.sections, { id: inserted.id, name: inserted.name, icon: inserted.icon, color: inserted.color }] }));
     }
   }, [user]);
+
+  // --- Custom Sections ---
+  const addCustomSection = useCallback(async (name: string, iconUrl?: string) => {
+    if (!user) return;
+    const { data: inserted } = await supabase.from('custom_sections' as any).insert({
+      user_id: user.id, name, icon_url: iconUrl || null,
+    } as any).select().single();
+    if (inserted) {
+      const cs = inserted as any;
+      setData(d => ({ ...d, customSections: [...d.customSections, { id: cs.id, name: cs.name, iconUrl: cs.icon_url || undefined }] }));
+    }
+  }, [user]);
+
+  const editCustomSection = useCallback(async (id: string, updates: { name?: string; iconUrl?: string }) => {
+    const dbUpdates: any = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.iconUrl !== undefined) dbUpdates.icon_url = updates.iconUrl;
+    await supabase.from('custom_sections' as any).update(dbUpdates).eq('id', id);
+    setData(d => ({
+      ...d, customSections: d.customSections.map(cs => cs.id === id ? { ...cs, ...updates } : cs),
+    }));
+  }, []);
+
+  const deleteCustomSection = useCallback(async (id: string) => {
+    // Tasks will be cascade deleted
+    await supabase.from('custom_sections' as any).delete().eq('id', id);
+    setData(d => ({
+      ...d,
+      customSections: d.customSections.filter(cs => cs.id !== id),
+      tasks: d.tasks.filter(t => t.customSectionId !== id),
+    }));
+  }, []);
 
   const addBandaid = useCallback(async (taskId: string, bandaid: string) => {
     const task = data.tasks.find(t => t.id === taskId);
@@ -322,9 +333,7 @@ export function useAppStore() {
   const addRevivalStep = useCallback(async (text: string) => {
     if (!user) return;
     const step = data.revivalSteps.length + 1;
-    const { data: inserted } = await supabase.from('revival_steps').insert({
-      user_id: user.id, step, text,
-    }).select().single();
+    const { data: inserted } = await supabase.from('revival_steps').insert({ user_id: user.id, step, text }).select().single();
     if (inserted) {
       setData(d => ({ ...d, revivalSteps: [...d.revivalSteps, { id: inserted.id, step: inserted.step, text: inserted.text }] }));
     }
@@ -366,42 +375,28 @@ export function useAppStore() {
     }
   }, []);
 
+  // Streak only counts main tasks (not custom section tasks)
   const today = new Date().toISOString().split('T')[0];
-  const completedCount = data.tasks.filter(t => t.completed).length;
-  const totalCount = data.tasks.length;
+  const completedCount = mainTasks.filter(t => t.completed).length;
+  const totalCount = mainTasks.length;
   const streakPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isGolden = streakPercent === 100 && totalCount > 0;
   const currentStreak = Math.max(streakPercent > 0 ? 1 : 0, 1);
 
   return {
-    tasks: data.tasks,
+    tasks: mainTasks,
+    allTasks: data.tasks,
     sections: data.sections,
+    customSections: data.customSections,
     streaks: data.streaks,
     revivalVideos: data.revivalVideos,
     revivalSteps: data.revivalSteps,
     visualizations: data.visualizations,
-    addTask,
-    toggleTask,
-    deleteTask,
-    editTask,
-    addSection,
-    addBandaid,
-    removeBandaid,
-    addProblem,
-    removeProblem,
-    addRevivalVideo,
-    removeRevivalVideo,
-    addRevivalStep,
-    removeRevivalStep,
-    addVisualization,
-    removeVisualization,
-    reorderTasks,
-    today,
-    completedCount,
-    totalCount,
-    streakPercent,
-    isGolden,
-    currentStreak,
-    loaded,
+    addTask, toggleTask, deleteTask, editTask, addSection,
+    addCustomSection, editCustomSection, deleteCustomSection,
+    addBandaid, removeBandaid, addProblem, removeProblem,
+    addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep,
+    addVisualization, removeVisualization, reorderTasks,
+    today, completedCount, totalCount, streakPercent, isGolden, currentStreak, loaded,
   };
 }
