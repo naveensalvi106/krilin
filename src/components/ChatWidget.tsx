@@ -128,6 +128,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
     setInput('');
     const userMsg: Msg = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
+    saveMessage('user', text);
     setLoading(true);
 
     try {
@@ -158,6 +159,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
         const textContent = choice.message.content;
         if (textContent) {
           setMessages(prev => [...prev, { role: 'assistant', content: textContent }]);
+          saveMessage('assistant', textContent);
         } else {
           // Generate a follow-up without tool calls
           const followUp = await fetch(CHAT_URL, {
@@ -181,11 +183,13 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             const fContent = fResult.choices?.[0]?.message?.content;
             if (fContent) {
               setMessages(prev => [...prev, { role: 'assistant', content: fContent }]);
+              saveMessage('assistant', fContent);
             }
           }
         }
       } else if (choice?.message?.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: choice.message.content }]);
+        saveMessage('assistant', choice.message.content);
       }
     } catch (e: any) {
       toast.error(e.message || 'Chat error');
