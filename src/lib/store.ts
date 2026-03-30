@@ -17,6 +17,7 @@ export interface Task {
   bandaids: string[];
   problems: Problem[];
   reminderTime?: string;
+  iconUrl?: string;
   createdAt: string;
   sortOrder: number;
 }
