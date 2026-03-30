@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { PartyPopper, Eye, X, Plus, Sparkles, Settings, ImagePlus } from 'lucide-react';
+import { PartyPopper, X, Plus, Sparkles, Pencil, ImagePlus } from 'lucide-react';
 import type { Visualization } from '@/lib/store';
 import ConfirmDialog from './ConfirmDialog';
 
@@ -15,7 +15,6 @@ interface CongratulateModalProps {
 }
 
 const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, onAddVisualization, onRemoveVisualization }: CongratulateModalProps) => {
-  const [phase, setPhase] = useState<'congrats' | 'visualize'>('congrats');
   const [editing, setEditing] = useState(false);
   const [newText, setNewText] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
@@ -24,7 +23,6 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleClose = () => {
-    setPhase('congrats');
     setEditing(false);
     setNewText('');
     setPreviewImg(null);
@@ -51,119 +49,139 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
 
   if (!open) return null;
 
+  const hasImages = visualizations.some(v => v.image);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={handleClose}>
       <motion.div
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        className="glass-panel-accent bevel relative p-8 max-w-sm w-full mx-4 text-center"
+        className="relative mx-4 w-full rounded-2xl overflow-hidden"
+        style={{
+          maxWidth: hasImages ? '420px' : '380px',
+          background: 'linear-gradient(145deg, hsl(35 80% 22%), hsl(25 70% 15%))',
+          border: '1px solid hsl(40 80% 35%)',
+          boxShadow: '0 0 40px hsl(30 100% 50% / 0.15), 0 20px 60px rgba(0,0,0,0.5)',
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleImageUpload} />
 
-        <button onClick={handleClose} className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
+        {/* Edit button - top left */}
+        <button
+          onClick={() => setEditing(!editing)}
+          className="absolute top-3 left-3 z-10 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
+          style={{
+            background: editing
+              ? 'linear-gradient(135deg, hsl(40 100% 55%), hsl(25 100% 50%))'
+              : 'linear-gradient(135deg, hsl(40 90% 45%), hsl(30 85% 35%))',
+            border: '2px solid hsl(45 100% 65%)',
+            boxShadow: '0 0 12px hsl(40 100% 50% / 0.5)',
+          }}
+        >
+          <Pencil className="w-4 h-4 text-white" />
+        </button>
+
+        {/* Close button - top right */}
+        <button onClick={handleClose} className="absolute top-3 right-3 z-10 text-muted-foreground hover:text-foreground">
           <X className="w-5 h-5" />
         </button>
 
-        {phase === 'congrats' ? (
-          <div className="space-y-4">
-            <PartyPopper className="w-12 h-12 mx-auto icon-glow text-primary" />
+        <div className="p-6 pt-14 space-y-4">
+          {/* Congrats header */}
+          <div className="text-center space-y-2">
+            <PartyPopper className="w-10 h-10 mx-auto icon-glow text-primary" />
             <h2 className="text-xl font-display text-gradient-fire">Incredible!</h2>
-            <p className="text-muted-foreground">You completed:</p>
-            <p className="text-foreground font-medium">"{taskTitle}"</p>
-            <button onClick={() => setPhase('visualize')} className="btn-premium text-primary-foreground flex items-center gap-2 mx-auto">
-              <Eye className="w-4 h-4" />
-              Visualize Your Future
-            </button>
+            <p className="text-muted-foreground text-sm">You completed: <span className="text-foreground font-medium">"{taskTitle}"</span></p>
           </div>
-        ) : (
-          <div className="space-y-4 text-left">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-display text-gradient-fire">See The Bigger Picture</h2>
-              <button
-                onClick={() => setEditing(!editing)}
-                className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
-                style={{
-                  background: editing
-                    ? 'linear-gradient(135deg, hsl(30 100% 55%), hsl(5 85% 48%))'
-                    : 'hsl(var(--muted))',
-                  border: editing ? 'none' : '1px solid hsl(var(--border))',
-                }}
-              >
-                <Settings className="w-3.5 h-3.5" />
-              </button>
-            </div>
 
-            <div className="space-y-2 max-h-48 overflow-y-auto">
+          {/* Visualizations - images shown large */}
+          {visualizations.length > 0 && (
+            <div className="space-y-3 max-h-[50vh] overflow-y-auto">
               {visualizations.map((v) => (
-                <div key={v.id} className="flex items-center gap-3 p-2 rounded-lg bg-muted/70">
+                <div key={v.id} className="relative">
                   {v.image && (
                     <img
                       src={v.image}
                       alt="Vision"
-                      className="max-w-[120px] max-h-[80px] rounded-lg object-contain cursor-pointer hover:scale-105 transition-transform"
+                      className="w-full rounded-xl object-contain cursor-pointer hover:scale-[1.02] transition-transform"
+                      style={{ maxHeight: '300px' }}
                       onClick={() => setViewImg(v.image)}
                     />
                   )}
-                  <div className="flex-1 min-w-0">
-                    <Sparkles className="w-3 h-3 inline mr-1 icon-glow" />
-                    <span className="text-sm">{v.text}</span>
-                  </div>
+                  {v.text && v.text !== 'Vision Board Image' && (
+                    <div
+                      className="rounded-xl px-4 py-3 flex items-center gap-2"
+                      style={{
+                        background: 'linear-gradient(135deg, hsl(40 100% 50%), hsl(25 100% 48%))',
+                        boxShadow: '0 4px 15px hsl(30 100% 50% / 0.3)',
+                        marginTop: v.image ? '8px' : '0',
+                      }}
+                    >
+                      <Sparkles className="w-4 h-4 text-white shrink-0" />
+                      <span className="text-white font-medium text-sm">{v.text}</span>
+                    </div>
+                  )}
                   {editing && (
                     <button
                       onClick={() => setConfirmRemoveId(v.id)}
-                      className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-destructive text-destructive-foreground"
+                      className="absolute top-2 right-2 w-6 h-6 rounded-full flex items-center justify-center bg-destructive text-destructive-foreground shadow-lg"
                     >
-                      <X className="w-3 h-3" />
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   )}
                 </div>
               ))}
-              {visualizations.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  <Sparkles className="w-4 h-4 inline mr-1" />
-                  No visualizations for this task yet. Tap ⚙️ to add some.
-                </p>
-              )}
             </div>
+          )}
 
-            {editing && (
-              <div className="space-y-2">
-                {previewImg && (
-                  <div className="relative inline-block">
-                    <img src={previewImg} alt="Preview" className="max-w-[120px] max-h-[80px] rounded-lg object-contain" />
-                    <button
-                      onClick={() => setPreviewImg(null)}
-                      className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center bg-destructive text-destructive-foreground"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex gap-2">
-                  <input
-                    value={newText}
-                    onChange={(e) => setNewText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
-                    placeholder="Add a visualization..."
-                    className="flex-1 bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
-                  />
-                  <button onClick={() => fileRef.current?.click()} className="w-8 h-8 solid-circle shrink-0 hover:scale-110 transition-transform">
-                    <ImagePlus className="w-4 h-4" />
-                  </button>
-                  <button onClick={handleAdd} className="w-8 h-8 solid-circle shrink-0 hover:scale-110 transition-transform">
-                    <Plus className="w-4 h-4" />
+          {/* Text-only visualizations as gradient boxes */}
+          {visualizations.length === 0 && !editing && (
+            <p className="text-sm text-muted-foreground text-center py-2">
+              <Sparkles className="w-4 h-4 inline mr-1" />
+              Tap the ✏️ to add your vision for this task
+            </p>
+          )}
+
+          {/* Editing controls */}
+          {editing && (
+            <div className="space-y-2">
+              {previewImg && (
+                <div className="relative inline-block">
+                  <img src={previewImg} alt="Preview" className="max-w-full max-h-[120px] rounded-lg object-contain" />
+                  <button
+                    onClick={() => setPreviewImg(null)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center bg-destructive text-destructive-foreground"
+                  >
+                    <X className="w-3 h-3" />
                   </button>
                 </div>
+              )}
+              <div className="flex gap-2">
+                <input
+                  value={newText}
+                  onChange={(e) => setNewText(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAdd()}
+                  placeholder="Add a visualization..."
+                  className="flex-1 bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
+                />
+                <button onClick={() => fileRef.current?.click()} className="w-8 h-8 solid-circle shrink-0 hover:scale-110 transition-transform">
+                  <ImagePlus className="w-4 h-4" />
+                </button>
+                <button onClick={handleAdd} className="w-8 h-8 solid-circle shrink-0 hover:scale-110 transition-transform">
+                  <Plus className="w-4 h-4" />
+                </button>
               </div>
-            )}
+            </div>
+          )}
 
-            <button onClick={handleClose} className="btn-premium text-primary-foreground w-full py-3 text-sm">
-              Keep Going 🔥
-            </button>
-          </div>
-        )}
+          {/* Close button */}
+          <button onClick={handleClose} className="btn-premium text-primary-foreground w-full py-3 text-sm">
+            Keep Going 🔥
+          </button>
+        </div>
 
+        {/* Full image viewer */}
         {viewImg && (
           <div className="fixed inset-0 z-[60] bg-black/90 flex items-center justify-center" onClick={() => setViewImg(null)}>
             <button onClick={() => setViewImg(null)} className="absolute top-4 right-4 text-white"><X className="w-6 h-6" /></button>
