@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, AlertTriangle, Bot, Sparkles, CalendarDays } from 'lucide-react';
+import { X, Send, AlertTriangle, Bot, Sparkles, CalendarDays, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { Section, Task } from '@/lib/store';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
