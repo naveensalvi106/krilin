@@ -36,6 +36,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Load chat history on first open
