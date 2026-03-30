@@ -113,9 +113,14 @@ const StreakOrb = ({ percent, isGolden, streak, completedCount, totalCount, next
                 <ArrowRight className="w-3.5 h-3.5 text-white/70" />
                 <span className="text-[10px] font-medium uppercase tracking-wider text-white/60">Next Up</span>
               </div>
-              <h3 className="text-xl font-display font-bold text-white leading-tight">
-                {nextTask.title}
-              </h3>
+              <div className="flex items-center gap-3">
+                {(nextTask.iconUrls || []).length > 0 && (
+                  <img src={nextTask.iconUrls![0]} alt="" className="w-7 h-7 object-contain shrink-0" />
+                )}
+                <h3 className="text-xl font-display font-bold text-white leading-tight">
+                  {nextTask.title}
+                </h3>
+              </div>
               {nextTaskSection && (
                 <span className="inline-block mt-2 text-[10px] px-2 py-0.5 rounded-full text-white/80 font-medium" style={{ background: 'hsla(0,0%,100%,0.15)' }}>
                   {nextTaskSection.name}
@@ -126,7 +131,7 @@ const StreakOrb = ({ percent, isGolden, streak, completedCount, totalCount, next
               <img 
                 src={nextTask.iconUrls![0]} 
                 alt="" 
-                className="w-28 h-28 object-contain shrink-0 opacity-90 drop-shadow-lg -mr-2" 
+                className="w-20 h-20 object-contain shrink-0 opacity-90 drop-shadow-lg" 
               />
             )}
           </div>
