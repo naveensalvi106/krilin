@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, Calendar, Trophy, ArrowRight } from 'lucide-react';
 import type { Task, Section } from '@/lib/store';
+import { playGolden } from '@/lib/sounds';
 
 
 interface StreakOrbProps {
@@ -14,6 +16,12 @@ interface StreakOrbProps {
 }
 
 const StreakOrb = ({ percent, isGolden, streak, completedCount, totalCount, nextTask, nextTaskSection }: StreakOrbProps) => {
+  const wasGolden = useRef(false);
+  useEffect(() => {
+    if (isGolden && !wasGolden.current) playGolden();
+    wasGolden.current = isGolden;
+  }, [isGolden]);
+
   const today = new Date();
   const dayName = today.toLocaleDateString('en-US', { weekday: 'long' });
   const dateStr = today.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
