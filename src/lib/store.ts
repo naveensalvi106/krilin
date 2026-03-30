@@ -193,10 +193,15 @@ export function useAppStore() {
       now.setHours(h, m, 0, 0);
       utcReminderTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
     }
+    // Place new task after all incomplete tasks
+    const incompleteTasks = data.tasks.filter(t => !t.completed);
+    const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
+    const newSortOrder = maxSortOrder + 1;
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
       reminder_time: utcReminderTime, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
       problems: [] as unknown as Json, custom_section_id: task.customSectionId || null,
+      sort_order: newSortOrder,
     } as any).select().single();
     if (inserted && !error) {
       const raw = inserted as any;
