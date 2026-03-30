@@ -114,9 +114,6 @@ const StreakOrb = ({ percent, isGolden, streak, completedCount, totalCount, next
                 <span className="text-[10px] font-medium uppercase tracking-wider text-white/60">Next Up</span>
               </div>
               <div className="flex items-center gap-3">
-                {(nextTask.iconUrls || []).length > 0 && (
-                  <img src={nextTask.iconUrls![0]} alt="" className="w-7 h-7 object-contain shrink-0" />
-                )}
                 <h3 className="text-xl font-display font-bold text-white leading-tight">
                   {nextTask.title}
                 </h3>
