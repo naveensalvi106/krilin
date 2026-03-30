@@ -197,6 +197,7 @@ export type Database = {
           completed: boolean
           created_at: string
           icon_url: string | null
+          icon_urls: string[] | null
           id: string
           problems: Json | null
           reminder_time: string | null
@@ -210,6 +211,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           icon_url?: string | null
+          icon_urls?: string[] | null
           id?: string
           problems?: Json | null
           reminder_time?: string | null
@@ -223,6 +225,7 @@ export type Database = {
           completed?: boolean
           created_at?: string
           icon_url?: string | null
+          icon_urls?: string[] | null
           id?: string
           problems?: Json | null
           reminder_time?: string | null
@@ -238,6 +241,7 @@ export type Database = {
           created_at: string
           id: string
           image: string | null
+          task_id: string | null
           text: string
           user_id: string
         }
@@ -245,6 +249,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          task_id?: string | null
           text: string
           user_id: string
         }
@@ -252,6 +257,7 @@ export type Database = {
           created_at?: string
           id?: string
           image?: string | null
+          task_id?: string | null
           text?: string
           user_id?: string
         }
