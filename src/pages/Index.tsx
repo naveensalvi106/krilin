@@ -10,6 +10,7 @@ import RevivalProtocol from '@/components/RevivalProtocol';
 import SectionNav from '@/components/SectionNav';
 import Notepad from '@/components/Notepad';
 import ChatWidget from '@/components/ChatWidget';
+import StickerManager, { useStickers } from '@/components/StickerManager';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
 
@@ -18,6 +19,7 @@ const Index = () => {
   const { user, signOut } = useAuth();
   useTaskReminders(store.tasks);
   usePushSubscription();
+  const { stickers, loading: stickersLoading, uploadSticker, deleteSticker } = useStickers();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showChat, setShowChat] = useState(false);
