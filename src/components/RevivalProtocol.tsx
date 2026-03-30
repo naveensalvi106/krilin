@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, ExternalLink, ChevronRight, Plus, X, Play, ShieldCheck, Link, Type } from 'lucide-react';
 import type { RevivalVideo, RevivalStep } from '@/lib/store';
+import ConfirmDialog from './ConfirmDialog';
 
 interface RevivalProtocolProps {
   revivalVideos: RevivalVideo[];
@@ -21,6 +22,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
   const [videoChannel, setVideoChannel] = useState('');
   const [stepText, setStepText] = useState('');
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
+  const [confirmRemove, setConfirmRemove] = useState<{ type: 'video' | 'step'; id: string } | null>(null);
 
   const stepPercent = revivalSteps.length > 0
     ? Math.round((completedSteps.size / revivalSteps.length) * 100)
@@ -54,6 +56,13 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
     }
   };
 
+  const handleConfirmRemove = () => {
+    if (!confirmRemove) return;
+    if (confirmRemove.type === 'video') onRemoveVideo(confirmRemove.id);
+    else onRemoveStep(confirmRemove.id);
+    setConfirmRemove(null);
+  };
+
   if (!active) {
     return (
       <button
@@ -76,7 +85,6 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
         <button onClick={() => { setActive(false); setCompletedSteps(new Set()); }} className="text-xs text-muted-foreground hover:text-foreground">Close</button>
       </div>
 
-      {/* Survival Circle */}
       <div className="flex flex-col items-center gap-2">
         <div className="relative w-20 h-20">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
@@ -96,7 +104,6 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
         </span>
       </div>
 
-      {/* Steps */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-muted-foreground">Emergency Steps</span>
@@ -122,13 +129,12 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
                 {done ? '✓' : s.step}
               </span>
               <span className={`flex-1 ${done ? 'line-through' : ''}`}>{s.text}</span>
-              <button onClick={e => { e.stopPropagation(); onRemoveStep(s.id); }} className="opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" /></button>
+              <button onClick={e => { e.stopPropagation(); setConfirmRemove({ type: 'step', id: s.id }); }} className="opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3.5 h-3.5 text-muted-foreground hover:text-destructive" /></button>
             </button>
           );
         })}
       </div>
 
-      {/* Videos */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-muted-foreground">Motivation Fuel</span>
@@ -167,7 +173,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
               </div>
               <ExternalLink className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <button
-                onClick={e => { e.preventDefault(); e.stopPropagation(); onRemoveVideo(v.id); }}
+                onClick={e => { e.preventDefault(); e.stopPropagation(); setConfirmRemove({ type: 'video', id: v.id }); }}
                 className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 w-5 h-5 rounded-full flex items-center justify-center transition-opacity"
                 style={{ background: 'hsl(0, 60%, 40%)' }}
               >
@@ -177,6 +183,14 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
           ))}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={!!confirmRemove}
+        onConfirm={handleConfirmRemove}
+        onCancel={() => setConfirmRemove(null)}
+        title={confirmRemove?.type === 'video' ? 'Remove Video?' : 'Remove Step?'}
+        description="Are you sure you want to remove this?"
+      />
     </div>
   );
 };

@@ -7,14 +7,14 @@ import TimePickerModal from './TimePickerModal';
 interface AddTaskFormProps {
   sections: Section[];
   stickers: Sticker[];
-  onAdd: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrl?: string }) => void;
+  onAdd: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => void;
 }
 
 const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
   const [title, setTitle] = useState('');
   const [sectionId, setSectionId] = useState(sections[0]?.id || '');
   const [reminderTime, setReminderTime] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('');
+  const [selectedIcons, setSelectedIcons] = useState<string[]>([]);
   const [expanded, setExpanded] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showIconPicker, setShowIconPicker] = useState(false);
@@ -30,11 +30,15 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd({ title: title.trim(), sectionId, bandaids: [], reminderTime: reminderTime || undefined, iconUrl: selectedIcon || undefined });
+    onAdd({ title: title.trim(), sectionId, bandaids: [], reminderTime: reminderTime || undefined, iconUrls: selectedIcons, sortOrder: 0 });
     setTitle('');
     setReminderTime('');
-    setSelectedIcon('');
+    setSelectedIcons([]);
     setExpanded(false);
+  };
+
+  const toggleIcon = (url: string) => {
+    setSelectedIcons(prev => prev.includes(url) ? prev.filter(u => u !== url) : [...prev, url]);
   };
 
   if (!expanded) {
@@ -53,9 +57,9 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
     <>
       <form onSubmit={handleSubmit} className="glass-panel bevel p-5 space-y-4">
         <div className="flex items-center gap-2">
-          {selectedIcon && (
-            <img src={selectedIcon} alt="" className="w-6 h-6 object-contain shrink-0" />
-          )}
+          {selectedIcons.map((url, i) => (
+            <img key={i} src={url} alt="" className="w-6 h-6 object-contain shrink-0" />
+          ))}
           <input
             autoFocus
             value={title}
@@ -88,7 +92,6 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {/* Set Reminder Button */}
           <button
             type="button"
             onClick={() => setShowTimePicker(true)}
@@ -106,12 +109,11 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
             <span className="text-sm">{reminderTime ? formatDisplay(reminderTime) : 'Reminder'}</span>
           </button>
 
-          {/* Sticker icon picker button */}
           <button
             type="button"
             onClick={() => setShowIconPicker(!showIconPicker)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02]"
-            style={selectedIcon ? {
+            style={selectedIcons.length > 0 ? {
               background: 'linear-gradient(135deg, hsl(280, 60%, 14%), hsl(260, 40%, 10%))',
               border: '1px solid hsl(280, 50%, 25%)',
               boxShadow: '0 0 12px hsl(280, 90%, 52% / 0.12)',
@@ -121,11 +123,10 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
             }}
           >
             <Image className="w-4 h-4 icon-glow" />
-            <span className="text-sm">{selectedIcon ? 'Icon ✓' : 'Add Icon'}</span>
+            <span className="text-sm">{selectedIcons.length > 0 ? `${selectedIcons.length} Icon${selectedIcons.length > 1 ? 's' : ''} ✓` : 'Add Icons'}</span>
           </button>
         </div>
 
-        {/* Sticker picker dropdown */}
         {showIconPicker && (
           <div className="rounded-xl p-3 border border-border" style={{ background: 'hsl(15, 10%, 8%)' }}>
             {stickers.length === 0 ? (
@@ -134,8 +135,8 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
               <div className="grid grid-cols-6 gap-2">
                 <button
                   type="button"
-                  onClick={() => { setSelectedIcon(''); setShowIconPicker(false); }}
-                  className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs border transition-all ${!selectedIcon ? 'border-primary' : 'border-border'}`}
+                  onClick={() => { setSelectedIcons([]); setShowIconPicker(false); }}
+                  className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs border transition-all ${selectedIcons.length === 0 ? 'border-primary' : 'border-border'}`}
                   style={{ background: 'hsl(15, 10%, 12%)' }}
                 >
                   None
@@ -144,8 +145,8 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
                   <button
                     key={s.name}
                     type="button"
-                    onClick={() => { setSelectedIcon(s.url); setShowIconPicker(false); }}
-                    className={`w-9 h-9 rounded-lg p-1 border transition-all ${selectedIcon === s.url ? 'border-primary scale-110' : 'border-border'}`}
+                    onClick={() => toggleIcon(s.url)}
+                    className={`w-9 h-9 rounded-lg p-1 border transition-all ${selectedIcons.includes(s.url) ? 'border-primary scale-110' : 'border-border'}`}
                     style={{ background: 'hsl(15, 10%, 12%)' }}
                   >
                     <img src={s.url} alt="" className="w-full h-full object-contain" />

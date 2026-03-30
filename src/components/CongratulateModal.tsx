@@ -2,22 +2,25 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { PartyPopper, Eye, X, Plus, Sparkles, Settings, ImagePlus } from 'lucide-react';
 import type { Visualization } from '@/lib/store';
+import ConfirmDialog from './ConfirmDialog';
 
 interface CongratulateModalProps {
   open: boolean;
   onClose: () => void;
   taskTitle: string;
+  taskId: string;
   visualizations: Visualization[];
-  onAddVisualization: (text: string, image?: string) => void;
+  onAddVisualization: (text: string, image?: string, taskId?: string) => void;
   onRemoveVisualization: (id: string) => void;
 }
 
-const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisualization, onRemoveVisualization }: CongratulateModalProps) => {
+const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, onAddVisualization, onRemoveVisualization }: CongratulateModalProps) => {
   const [phase, setPhase] = useState<'congrats' | 'visualize'>('congrats');
   const [editing, setEditing] = useState(false);
   const [newText, setNewText] = useState('');
   const [previewImg, setPreviewImg] = useState<string | null>(null);
   const [viewImg, setViewImg] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleClose = () => {
@@ -31,7 +34,7 @@ const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisu
 
   const handleAdd = () => {
     if (newText.trim() || previewImg) {
-      onAddVisualization(newText.trim() || 'Vision Board Image', previewImg || undefined);
+      onAddVisualization(newText.trim() || 'Vision Board Image', previewImg || undefined, taskId);
       setNewText('');
       setPreviewImg(null);
     }
@@ -108,7 +111,7 @@ const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisu
                   </div>
                   {editing && (
                     <button
-                      onClick={() => onRemoveVisualization(v.id)}
+                      onClick={() => setConfirmRemoveId(v.id)}
                       className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 bg-destructive text-destructive-foreground"
                     >
                       <X className="w-3 h-3" />
@@ -119,7 +122,7 @@ const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisu
               {visualizations.length === 0 && (
                 <p className="text-sm text-muted-foreground text-center py-4">
                   <Sparkles className="w-4 h-4 inline mr-1" />
-                  No visualizations yet. Tap ⚙️ to add some.
+                  No visualizations for this task yet. Tap ⚙️ to add some.
                 </p>
               )}
             </div>
@@ -168,6 +171,14 @@ const CongratulateModal = ({ open, onClose, taskTitle, visualizations, onAddVisu
           </div>
         )}
       </motion.div>
+
+      <ConfirmDialog
+        open={!!confirmRemoveId}
+        onConfirm={() => { if (confirmRemoveId) onRemoveVisualization(confirmRemoveId); setConfirmRemoveId(null); }}
+        onCancel={() => setConfirmRemoveId(null)}
+        title="Remove Visualization?"
+        description="Are you sure you want to remove this visualization?"
+      />
     </div>
   );
 };

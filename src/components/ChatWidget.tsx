@@ -21,7 +21,7 @@ interface ChatWidgetProps {
   onClose: () => void;
   sections: Section[];
   tasks: Task[];
-  onAddTask: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string }) => Promise<void>;
+  onAddTask: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls?: string[]; sortOrder?: number }) => Promise<void>;
   onToggleTask: (id: string) => Promise<void>;
   onDeleteTask: (id: string) => Promise<void>;
 }
