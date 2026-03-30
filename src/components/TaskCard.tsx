@@ -132,8 +132,10 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                 autoFocus
                 value={editTitle}
                 onChange={e => setEditTitle(e.target.value)}
-                onBlur={handleSaveEdit}
-                onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') { setEditTitle(task.title); setEditing(false); } }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') handleSaveEdit();
+                  if (e.key === 'Escape') { setEditTitle(task.title); setEditing(false); }
+                }}
                 className="flex-1 bg-transparent border-b border-white/30 text-[15px] font-medium text-white focus:outline-none min-w-0"
               />
             ) : (
