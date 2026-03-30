@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, ImagePlus, X, Loader2 } from 'lucide-react';
+import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
 import StreakOrb from '@/components/StreakOrb';
@@ -10,16 +10,8 @@ import RevivalProtocol from '@/components/RevivalProtocol';
 import Notepad from '@/components/Notepad';
 import ChatWidget from '@/components/ChatWidget';
 import StickerManager, { useStickers } from '@/components/StickerManager';
-import ConfirmDialog from '@/components/ConfirmDialog';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
-
-const SECTION_COLORS = [
-  '45 95% 50%', '200 80% 50%', '280 70% 50%', '120 65% 45%', '340 75% 55%',
-  '170 70% 45%', '25 90% 55%', '260 65% 55%', '60 80% 45%', '310 60% 50%',
-];
 
 const Index = () => {
   const store = useAppStore();
@@ -32,93 +24,19 @@ const Index = () => {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const dragOverId = useRef<string | null>(null);
 
-  // Tab state: null = "All Tasks", string = custom section id
-  const [activeTab, setActiveTab] = useState<string | null>(null);
-  const [showAddSection, setShowAddSection] = useState(false);
-  const [newSectionName, setNewSectionName] = useState('');
-  const [newSectionIcon, setNewSectionIcon] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [confirmDeleteSection, setConfirmDeleteSection] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
-
-
   const handleDragStart = (id: string) => setDraggedId(id);
   const handleDragOver = (e: React.DragEvent, id: string) => { e.preventDefault(); dragOverId.current = id; };
   const handleDragEnd = () => {
     if (!draggedId || !dragOverId.current || draggedId === dragOverId.current) { setDraggedId(null); return; }
-    const visibleTasks = activeTab
-      ? store.allTasks.filter(t => t.customSectionId === activeTab).sort((a, b) => {
-          if (a.completed !== b.completed) return a.completed ? 1 : -1;
-          return a.sortOrder - b.sortOrder;
-        })
-      : [...store.tasks];
-
-    const items = [...visibleTasks];
+    const items = [...store.tasks];
     const fromIdx = items.findIndex(t => t.id === draggedId);
     const toIdx = items.findIndex(t => t.id === dragOverId.current);
     if (fromIdx === -1 || toIdx === -1) { setDraggedId(null); return; }
     const [moved] = items.splice(fromIdx, 1);
     items.splice(toIdx, 0, moved);
-
-    const merged = activeTab
-      ? [...store.allTasks.filter(t => t.customSectionId !== activeTab), ...items]
-      : [...items, ...store.allTasks.filter(t => t.customSectionId)];
-
-    store.reorderTasks(merged);
+    store.reorderTasks(items);
     setDraggedId(null);
     dragOverId.current = null;
-  };
-
-  // Section helpers
-  const uploadIcon = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-    if (file.size > 2 * 1024 * 1024) { toast.error('Max 2MB'); return null; }
-    const safeName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9._-]/g, '')}`;
-    const { error } = await supabase.storage.from('section-icons').upload(`${user.id}/${safeName}`, file, { contentType: file.type });
-    if (error) { toast.error('Upload failed'); return null; }
-    return supabase.storage.from('section-icons').getPublicUrl(`${user.id}/${safeName}`).data.publicUrl;
-  };
-
-  const handleCreateSection = async () => {
-    if (!newSectionName.trim()) return;
-    store.addCustomSection(newSectionName.trim(), newSectionIcon || undefined);
-    setNewSectionName('');
-    setNewSectionIcon(null);
-    setShowAddSection(false);
-  };
-
-  const handleIconUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
-    const url = await uploadIcon(file);
-    if (url) setNewSectionIcon(url);
-    setUploading(false);
-    e.target.value = '';
-  };
-
-  const activeCustomSection = store.customSections.find(cs => cs.id === activeTab);
-  const activeSectionTasks = activeTab
-    ? store.allTasks.filter(t => t.customSectionId === activeTab).sort((a, b) => {
-        if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return a.sortOrder - b.sortOrder;
-      })
-    : [];
-  const visibleTasks = activeTab ? activeSectionTasks : store.tasks;
-  const visibleCompletedCount = visibleTasks.filter(t => t.completed).length;
-  const visibleTotalCount = visibleTasks.length;
-  const activeSectionIdx = store.customSections.findIndex(cs => cs.id === activeTab);
-  const activeSectionColor = activeTab ? SECTION_COLORS[activeSectionIdx % SECTION_COLORS.length] : '';
-  const currentAddSections = activeTab && activeCustomSection
-    ? [{ id: 'custom', name: activeCustomSection.name, icon: '', color: activeSectionColor || '45 95% 50%' }]
-    : store.sections;
-
-  const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => {
-    if (activeTab) {
-      store.addTask({ ...task, sectionId: 'custom', customSectionId: activeTab });
-      return;
-    }
-    store.addTask(task);
   };
 
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
@@ -189,8 +107,7 @@ const Index = () => {
       {showProfile && <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />}
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)]">
-        {/* StreakOrb - only on All Tasks tab */}
-        {activeTab === null && (() => {
+        {(() => {
           const nextTask = store.tasks.find(t => !t.completed);
           const nextTaskSection = nextTask ? store.sections.find(s => s.id === nextTask.sectionId) : undefined;
           return (
@@ -200,88 +117,26 @@ const Index = () => {
           );
         })()}
 
-
-
-
-        {/* Add Section Modal */}
-        <input type="file" ref={fileRef} className="hidden" accept="image/png,image/jpeg,image/webp" onChange={handleIconUpload} />
-
-        <AnimatePresence>
-          {showAddSection && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-              <div className="glass-panel bevel p-4 space-y-3">
-                <div className="flex items-center gap-3">
-                  <button onClick={() => fileRef.current?.click()} className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border-2 border-dashed border-muted-foreground/30 hover:border-primary transition-colors overflow-hidden" style={{ background: 'hsl(var(--muted))' }}>
-                    {uploading ? <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /> :
-                      newSectionIcon ? <img src={newSectionIcon} alt="" className="w-full h-full object-cover" /> :
-                      <ImagePlus className="w-5 h-5 text-muted-foreground" />}
-                  </button>
-                  <input autoFocus value={newSectionName} onChange={e => setNewSectionName(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleCreateSection()} placeholder="Section name..." className="flex-1 bg-transparent border-b border-border pb-1 text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary text-lg" />
-                </div>
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => { setShowAddSection(false); setNewSectionName(''); setNewSectionIcon(null); }} className="px-3 py-1.5 text-sm rounded-xl text-muted-foreground hover:text-foreground" style={{ background: 'hsl(15, 10%, 10%)', border: '1px solid hsl(15, 15%, 16%)' }}>Cancel</button>
-                  <button onClick={handleCreateSection} className="btn-premium text-primary-foreground px-4 py-1.5 text-sm">Create</button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AddTaskForm sections={currentAddSections} stickers={stickers} onAdd={handleAddTask} />
+        <AddTaskForm sections={store.sections} stickers={stickers} onAdd={store.addTask} />
 
         <div className="space-y-3">
-          <div className="flex items-center gap-0 overflow-x-auto pb-1 scrollbar-none">
-            <h2
-              className={`font-display text-sm whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 transition-colors ${activeTab === null ? 'text-gradient-fire border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-              onClick={() => setActiveTab(null)}
-            >
-              All Tasks
-            </h2>
-
-            {store.customSections.map((cs) => (
-              <React.Fragment key={cs.id}>
-                <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
-                <h2
-                  className={`font-display text-sm whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 flex items-center gap-1.5 transition-colors ${cs.id === activeTab ? 'text-gradient-fire border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                  onClick={() => setActiveTab(cs.id)}
-                >
-                  {cs.iconUrl && <img src={cs.iconUrl} alt="" className="w-4 h-4 object-contain rounded" />}
-                  {cs.name}
-                </h2>
-              </React.Fragment>
-            ))}
-
-            <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
-
-            <button
-              onClick={() => setShowAddSection(true)}
-              className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform ml-1"
-              style={{
-                background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
-                boxShadow: '0 0 10px hsl(35 100% 50% / 0.3)',
-              }}
-              title="Add Section"
-            >
-              <Plus className="w-3.5 h-3.5 text-white" />
-            </button>
-
-            <span className="text-xs text-muted-foreground ml-auto shrink-0">{visibleCompletedCount}/{visibleTotalCount} done</span>
+          <div className="flex items-center justify-between pb-1">
+            <h2 className="font-display text-sm text-gradient-fire">All Tasks</h2>
+            <span className="text-xs text-muted-foreground">{store.completedCount}/{store.totalCount} done</span>
           </div>
 
           <div className="space-y-3">
-            {visibleTasks.length === 0 ? (
+            {store.tasks.length === 0 ? (
               <div className="glass-panel bevel p-8 text-center">
-                <p className="text-muted-foreground text-sm">{activeTab ? 'No tasks in this side section yet.' : 'No tasks yet. Add your first task to start building your system.'}</p>
+                <p className="text-muted-foreground text-sm">No tasks yet. Add your first task to start building your system.</p>
               </div>
             ) : (
-              visibleTasks.map(task => (
+              store.tasks.map(task => (
                 <div key={task.id} draggable onDragStart={() => handleDragStart(task.id)} onDragOver={(e) => handleDragOver(e, task.id)} onDragEnd={handleDragEnd}
                   className={`transition-opacity ${draggedId === task.id ? 'opacity-50' : ''}`}>
                   <TaskCard
                     task={task}
-                    section={activeTab && activeCustomSection
-                      ? { id: activeCustomSection.id, name: activeCustomSection.name, icon: '', color: activeSectionColor || '45 95% 50%' }
-                      : store.sections.find(s => s.id === task.sectionId)}
+                    section={store.sections.find(s => s.id === task.sectionId)}
                     onToggle={store.toggleTask}
                     onDelete={store.deleteTask}
                     onEdit={store.editTask}
@@ -302,29 +157,12 @@ const Index = () => {
           </div>
         </div>
 
-        {activeTab === null && (
-          <RevivalProtocol
-            revivalVideos={store.revivalVideos} revivalSteps={store.revivalSteps}
-            onAddVideo={store.addRevivalVideo} onRemoveVideo={store.removeRevivalVideo}
-            onAddStep={store.addRevivalStep} onRemoveStep={store.removeRevivalStep}
-          />
-        )}
+        <RevivalProtocol
+          revivalVideos={store.revivalVideos} revivalSteps={store.revivalSteps}
+          onAddVideo={store.addRevivalVideo} onRemoveVideo={store.removeRevivalVideo}
+          onAddStep={store.addRevivalStep} onRemoveStep={store.removeRevivalStep}
+        />
       </div>
-
-      {/* Confirm delete section */}
-      <ConfirmDialog
-        open={!!confirmDeleteSection}
-        onConfirm={() => {
-          if (confirmDeleteSection) {
-            store.deleteCustomSection(confirmDeleteSection);
-            if (activeTab === confirmDeleteSection) setActiveTab(null);
-          }
-          setConfirmDeleteSection(null);
-        }}
-        onCancel={() => setConfirmDeleteSection(null)}
-        title="Delete Section?"
-        description="This will delete the section and all its tasks. Are you sure?"
-      />
 
       <ChatWidget open={showChat} onClose={() => setShowChat(false)} sections={store.sections} tasks={store.tasks}
         onAddTask={store.addTask} onToggleTask={store.toggleTask} onDeleteTask={store.deleteTask} />
