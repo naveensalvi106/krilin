@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, ChevronLeft, Pencil, ImagePlus, X, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
