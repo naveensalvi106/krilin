@@ -3,6 +3,7 @@ import { Plus, AlarmClock, Image } from 'lucide-react';
 import type { Section } from '@/lib/store';
 import type { Sticker } from './StickerManager';
 import TimePickerModal from './TimePickerModal';
+import { playAddTask, playOpen, playClose } from '@/lib/sounds';
 
 interface AddTaskFormProps {
   sections: Section[];
@@ -31,6 +32,7 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
     e.preventDefault();
     if (!title.trim()) return;
     onAdd({ title: title.trim(), sectionId, bandaids: [], reminderTime: reminderTime || undefined, iconUrls: selectedIcons, sortOrder: 0 });
+    playAddTask();
     setTitle('');
     setReminderTime('');
     setSelectedIcons([]);
@@ -44,7 +46,7 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
   if (!expanded) {
     return (
       <button
-        onClick={() => setExpanded(true)}
+        onClick={() => { setExpanded(true); playOpen(); }}
         className="w-full glass-panel bevel p-4 flex items-center gap-3 text-muted-foreground hover:text-foreground transition-colors group"
       >
         <Plus className="w-5 h-5 icon-glow" />
@@ -158,7 +160,7 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
         )}
 
         <div className="flex gap-3 justify-end">
-          <button type="button" onClick={() => setExpanded(false)} className="px-4 py-2 text-sm rounded-xl text-muted-foreground hover:text-foreground transition-colors" style={{ background: 'hsl(15, 10%, 10%)', border: '1px solid hsl(15, 15%, 16%)' }}>
+          <button type="button" onClick={() => { setExpanded(false); playClose(); }} className="px-4 py-2 text-sm rounded-xl text-muted-foreground hover:text-foreground transition-colors" style={{ background: 'hsl(15, 10%, 10%)', border: '1px solid hsl(15, 15%, 16%)' }}>
             Cancel
           </button>
           <button type="submit" className="btn-premium text-primary-foreground px-6 py-2 text-sm">Add Task</button>
