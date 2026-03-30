@@ -10,8 +10,8 @@ self.addEventListener('push', (event) => {
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
-      icon: '/placeholder.svg',
-      badge: '/placeholder.svg',
+      icon: '/home-icon-192.png?v=2',
+      badge: '/home-icon-192.png?v=2',
       vibrate: [200, 100, 200],
       tag: data.tag || 'task-reminder',
       data: data.url || '/',

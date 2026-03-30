@@ -71,7 +71,6 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
             : `0 4px 16px hsl(${sectionColor} / 0.2), 0 1px 3px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(${hue} ${sat} 28%), inset 0 -1px 0 hsl(${hue} ${sat} 5%)`,
         }}
       >
-        {/* Left accent bar */}
         <div
           className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
           style={{
@@ -79,7 +78,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
             boxShadow: `2px 0 8px hsl(${sectionColor} / 0.4)`,
           }}
         />
-        {/* Single row: drag + check + icon + title + reminder + actions */}
+
         <div className="flex items-center gap-2">
           <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors shrink-0">
             <GripVertical className="w-4 h-4" />
@@ -138,7 +137,6 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
           </div>
         </div>
 
-        {/* Bandaids Section */}
         <AnimatePresence>
           {showBandaids && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
@@ -162,23 +160,22 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
           )}
         </AnimatePresence>
 
-        {/* Problems Section */}
         <AnimatePresence>
           {showProblems && (
             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
               <p className="text-xs text-muted-foreground font-medium">⚠️ Problems & Solutions</p>
               {task.problems.length > 0 && (
                 <div className="space-y-1">
-                  {task.problems.map(p => (
+                  {task.problems.map((p) => (
                     <div key={p.id} className="rounded-lg overflow-hidden" style={{ background: 'hsl(15, 10%, 10%)' }}>
-                      <button
+                      <div
                         onClick={() => setExpandedProblem(expandedProblem === p.id ? null : p.id)}
-                        className="w-full flex items-center gap-2 p-3 text-left"
+                        className="w-full flex items-center gap-2 p-3 text-left cursor-pointer"
                       >
-                        {expandedProblem === p.id ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+                        {expandedProblem === p.id ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
                         <span className="flex-1 text-sm">{p.title}</span>
-                        <button onClick={e => { e.stopPropagation(); onRemoveProblem(task.id, p.id); }} className="text-muted-foreground hover:text-destructive"><X className="w-3 h-3" /></button>
-                      </button>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); onRemoveProblem(task.id, p.id); }} className="text-muted-foreground hover:text-destructive shrink-0"><X className="w-3 h-3" /></button>
+                      </div>
                       {expandedProblem === p.id && (
                         <div className="px-3 pb-3 text-xs text-muted-foreground">
                           <span className="text-primary font-medium">Solution:</span>
