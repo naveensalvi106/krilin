@@ -17,7 +17,7 @@ export interface Task {
   bandaids: string[];
   problems: Problem[];
   reminderTime?: string;
-  iconUrl?: string;
+  iconUrls: string[];
   createdAt: string;
   sortOrder: number;
 }
@@ -53,6 +53,7 @@ export interface Visualization {
   id: string;
   text: string;
   image?: string;
+  taskId?: string;
 }
 
 export const DEFAULT_SECTIONS: Section[] = [
@@ -110,19 +111,28 @@ export function useAppStore() {
       }));
 
       setData({
-        tasks: (tasksRes.data || []).map(t => ({
-          id: t.id,
-          title: t.title,
-          sectionId: t.section_id,
-          completed: t.completed,
-          bandaids: t.bandaids || [],
-          problems: (t.problems as unknown as Problem[]) || [],
-          reminderTime: t.reminder_time || undefined,
-          iconUrl: (t as any).icon_url || undefined,
-          createdAt: t.created_at,
-          sortOrder: (t as any).sort_order ?? 0,
-        })).sort((a, b) => {
-          // Completed tasks go to bottom, then sort by sortOrder
+        tasks: (tasksRes.data || []).map(t => {
+          const raw = t as any;
+          // Support both icon_urls array and legacy icon_url
+          let iconUrls: string[] = [];
+          if (raw.icon_urls && Array.isArray(raw.icon_urls) && raw.icon_urls.length > 0) {
+            iconUrls = raw.icon_urls.filter(Boolean);
+          } else if (raw.icon_url) {
+            iconUrls = [raw.icon_url];
+          }
+          return {
+            id: t.id,
+            title: t.title,
+            sectionId: t.section_id,
+            completed: t.completed,
+            bandaids: t.bandaids || [],
+            problems: (t.problems as unknown as Problem[]) || [],
+            reminderTime: t.reminder_time || undefined,
+            iconUrls,
+            createdAt: t.created_at,
+            sortOrder: raw.sort_order ?? 0,
+          };
+        }).sort((a, b) => {
           if (a.completed !== b.completed) return a.completed ? 1 : -1;
           return a.sortOrder - b.sortOrder;
         }),
@@ -143,6 +153,7 @@ export function useAppStore() {
           id: v.id,
           text: v.text,
           image: v.image || undefined,
+          taskId: (v as any).task_id || undefined,
         })),
       });
       setLoaded(true);
@@ -150,7 +161,6 @@ export function useAppStore() {
 
     load();
 
-    // Realtime subscriptions for cross-device sync
     const channel = supabase
       .channel('app-realtime-sync')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${user.id}` }, () => { load(); })
@@ -196,10 +206,12 @@ export function useAppStore() {
       section_id: task.sectionId,
       bandaids: task.bandaids,
       reminder_time: utcReminderTime,
-      icon_url: task.iconUrl || null,
+      icon_url: task.iconUrls?.[0] || null,
+      icon_urls: task.iconUrls || [],
       problems: [] as unknown as Json,
     } as any).select().single();
     if (inserted && !error) {
+      const raw = inserted as any;
       const newTask: Task = {
         id: inserted.id,
         title: inserted.title,
@@ -208,9 +220,9 @@ export function useAppStore() {
         bandaids: inserted.bandaids || [],
         problems: [],
         reminderTime: inserted.reminder_time || undefined,
-        iconUrl: (inserted as any).icon_url || undefined,
+        iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []),
         createdAt: inserted.created_at,
-        sortOrder: (inserted as any).sort_order ?? 0,
+        sortOrder: raw.sort_order ?? 0,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
     }
@@ -223,7 +235,6 @@ export function useAppStore() {
     await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
     setData(d => {
       const updated = d.tasks.map(t => t.id === id ? { ...t, completed: newCompleted } : t);
-      // Re-sort: incomplete first by sortOrder, completed last by sortOrder
       updated.sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return a.sortOrder - b.sortOrder;
@@ -235,6 +246,20 @@ export function useAppStore() {
   const deleteTask = useCallback(async (id: string) => {
     await supabase.from('tasks').delete().eq('id', id);
     setData(d => ({ ...d, tasks: d.tasks.filter(t => t.id !== id) }));
+  }, []);
+
+  const editTask = useCallback(async (id: string, updates: { title?: string; iconUrls?: string[] }) => {
+    const dbUpdates: any = {};
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.iconUrls !== undefined) {
+      dbUpdates.icon_urls = updates.iconUrls;
+      dbUpdates.icon_url = updates.iconUrls[0] || null;
+    }
+    await supabase.from('tasks').update(dbUpdates).eq('id', id);
+    setData(d => ({
+      ...d,
+      tasks: d.tasks.map(t => t.id === id ? { ...t, ...updates } : t),
+    }));
   }, []);
 
   const addSection = useCallback(async (section: Omit<Section, 'id'>) => {
@@ -314,13 +339,13 @@ export function useAppStore() {
     });
   }, []);
 
-  const addVisualization = useCallback(async (text: string, image?: string) => {
+  const addVisualization = useCallback(async (text: string, image?: string, taskId?: string) => {
     if (!user) return;
     const { data: inserted } = await supabase.from('visualizations').insert({
-      user_id: user.id, text, image: image || null,
-    }).select().single();
+      user_id: user.id, text, image: image || null, task_id: taskId || null,
+    } as any).select().single();
     if (inserted) {
-      setData(d => ({ ...d, visualizations: [...d.visualizations, { id: inserted.id, text: inserted.text, image: inserted.image || undefined }] }));
+      setData(d => ({ ...d, visualizations: [...d.visualizations, { id: inserted.id, text: inserted.text, image: inserted.image || undefined, taskId: (inserted as any).task_id || undefined }] }));
     }
   }, [user]);
 
@@ -331,7 +356,6 @@ export function useAppStore() {
 
   const reorderTasks = useCallback(async (reorderedTasks: Task[]) => {
     const updated = reorderedTasks.map((t, i) => ({ ...t, sortOrder: i }));
-    // Sort: incomplete first, completed last
     updated.sort((a, b) => {
       if (a.completed !== b.completed) return a.completed ? 1 : -1;
       return a.sortOrder - b.sortOrder;
@@ -359,6 +383,7 @@ export function useAppStore() {
     addTask,
     toggleTask,
     deleteTask,
+    editTask,
     addSection,
     addBandaid,
     removeBandaid,

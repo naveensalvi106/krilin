@@ -1,27 +1,29 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
-import type { Task, Section } from '@/lib/store';
+import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical, Pencil } from 'lucide-react';
+import type { Task, Section, Visualization } from '@/lib/store';
 import CongratulateModal from './CongratulateModal';
-import type { Visualization } from '@/lib/store';
+import ConfirmDialog from './ConfirmDialog';
 
 interface TaskCardProps {
   task: Task;
   section?: Section;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  onEdit: (id: string, updates: { title?: string; iconUrls?: string[] }) => void;
   onAddBandaid: (taskId: string, bandaid: string) => void;
   onRemoveBandaid: (taskId: string, index: number) => void;
   onAddProblem: (taskId: string, title: string, solution: string) => void;
   onRemoveProblem: (taskId: string, problemId: string) => void;
   visualizations: Visualization[];
-  onAddVisualization: (text: string, image?: string) => void;
+  onAddVisualization: (text: string, image?: string, taskId?: string) => void;
   onRemoveVisualization: (id: string) => void;
   isDragging?: boolean;
   dragHandleProps?: Record<string, any>;
+  stickers?: { name: string; url: string }[];
 }
 
-const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps }: TaskCardProps) => {
+const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps, stickers = [] }: TaskCardProps) => {
   const [showBandaids, setShowBandaids] = useState(false);
   const [showProblems, setShowProblems] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
@@ -29,6 +31,12 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
   const [newProblemTitle, setNewProblemTitle] = useState('');
   const [newProblemSolution, setNewProblemSolution] = useState('');
   const [expandedProblem, setExpandedProblem] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(task.title);
+  const [showIconPicker, setShowIconPicker] = useState(false);
+
+  // Confirm dialog state
+  const [confirmAction, setConfirmAction] = useState<{ type: string; payload?: any } | null>(null);
 
   const handleToggle = () => {
     if (!task.completed) {
@@ -52,9 +60,36 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
     }
   };
 
-  const sectionColor = section?.color || '25 95% 53%';
+  const handleConfirm = () => {
+    if (!confirmAction) return;
+    switch (confirmAction.type) {
+      case 'deleteTask': onDelete(task.id); break;
+      case 'removeBandaid': onRemoveBandaid(task.id, confirmAction.payload); break;
+      case 'removeProblem': onRemoveProblem(task.id, confirmAction.payload); break;
+      case 'removeVisualization': onRemoveVisualization(confirmAction.payload); break;
+    }
+    setConfirmAction(null);
+  };
+
+  const handleSaveEdit = () => {
+    if (editTitle.trim() && editTitle.trim() !== task.title) {
+      onEdit(task.id, { title: editTitle.trim() });
+    }
+    setEditing(false);
+  };
+
+  const handleToggleIcon = (url: string) => {
+    const current = task.iconUrls || [];
+    const newIcons = current.includes(url) ? current.filter(u => u !== url) : [...current, url];
+    onEdit(task.id, { iconUrls: newIcons });
+  };
+
+  const sectionColor = section?.color || '45 95% 53%';
   const hue = sectionColor.split(' ')[0];
   const sat = sectionColor.split(' ')[1] || '80%';
+
+  // Per-task visualizations
+  const taskVisualizations = visualizations.filter(v => v.taskId === task.id);
 
   return (
     <>
@@ -62,36 +97,47 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
         layout
         className={`relative rounded-xl px-3 py-3 pl-5 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'scale-[1.02]' : ''}`}
         style={{
-          background: `linear-gradient(145deg, hsl(${hue} ${sat} 18%), hsl(${hue} ${sat} 12%), hsl(${hue} ${sat} 8%))`,
-          border: `1px solid hsl(${hue} ${sat} 25%)`,
-          borderTop: `1px solid hsl(${hue} ${sat} 30%)`,
-          borderBottom: `1px solid hsl(${hue} ${sat} 6%)`,
+          background: `linear-gradient(145deg, hsl(${hue} ${sat} 45%), hsl(${hue} ${sat} 35%), hsl(${hue} ${sat} 25%))`,
+          border: `1px solid hsl(${hue} ${sat} 55%)`,
+          borderTop: `1px solid hsl(${hue} ${sat} 60%)`,
+          borderBottom: `1px solid hsl(${hue} ${sat} 20%)`,
           boxShadow: isDragging
-            ? `0 8px 32px hsl(${sectionColor} / 0.5), inset 0 1px 0 hsl(${hue} ${sat} 28%), inset 0 -1px 0 hsl(${hue} ${sat} 5%)`
-            : `0 4px 16px hsl(${sectionColor} / 0.2), 0 1px 3px hsl(0 0% 0% / 0.3), inset 0 1px 0 hsl(${hue} ${sat} 28%), inset 0 -1px 0 hsl(${hue} ${sat} 5%)`,
+            ? `0 8px 32px hsl(${sectionColor} / 0.5), inset 0 1px 0 hsl(${hue} ${sat} 65%), inset 0 -1px 0 hsl(${hue} ${sat} 15%)`
+            : `0 4px 16px hsl(${sectionColor} / 0.3), 0 1px 3px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(${hue} ${sat} 65%), inset 0 -1px 0 hsl(${hue} ${sat} 15%)`,
         }}
       >
         <div
           className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
           style={{
-            background: `linear-gradient(180deg, hsl(${hue} ${sat} 55%), hsl(${hue} ${sat} 35%))`,
+            background: `linear-gradient(180deg, hsl(${hue} ${sat} 70%), hsl(${hue} ${sat} 50%))`,
             boxShadow: `2px 0 8px hsl(${sectionColor} / 0.4)`,
           }}
         />
 
         <div className="flex items-center gap-2">
-          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors shrink-0">
+          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-white/60 hover:text-white transition-colors shrink-0">
             <GripVertical className="w-4 h-4" />
           </div>
-          <button onClick={handleToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground hover:border-primary'}`}>
-            {task.completed && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
+          <button onClick={handleToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-white border-white' : 'border-white/50 hover:border-white'}`}>
+            {task.completed && <Check className="w-3.5 h-3.5 text-gray-800" />}
           </button>
-          {task.iconUrl && (
-            <img src={task.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
+          {(task.iconUrls || []).map((url, i) => (
+            <img key={i} src={url} alt="" className="w-5 h-5 object-contain shrink-0" />
+          ))}
+          {editing ? (
+            <input
+              autoFocus
+              value={editTitle}
+              onChange={e => setEditTitle(e.target.value)}
+              onBlur={handleSaveEdit}
+              onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(); if (e.key === 'Escape') { setEditTitle(task.title); setEditing(false); } }}
+              className="flex-1 bg-transparent border-b border-white/30 text-[15px] font-medium text-white focus:outline-none min-w-0"
+            />
+          ) : (
+            <span className={`flex-1 font-medium text-[15px] min-w-0 truncate ${task.completed ? 'line-through text-white/50' : 'text-white'}`}>
+              {task.title}
+            </span>
           )}
-          <span className={`flex-1 font-medium text-[15px] min-w-0 truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
-            {task.title}
-          </span>
 
           {task.reminderTime && (() => {
             const [h, m] = task.reminderTime.split(':').map(Number);
@@ -101,7 +147,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
             const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
             const displayTime = `${hour12}:${String(d.getMinutes()).padStart(2, '0')} ${ampm}`;
             return (
-              <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground shrink-0">
+              <span className="flex items-center gap-0.5 text-[10px] text-white/60 shrink-0">
                 <Clock className="w-2.5 h-2.5" />
                 {displayTime}
               </span>
@@ -109,51 +155,80 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
           })()}
 
           <div className="flex items-center gap-1 shrink-0">
-            <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); }}
+            <button onClick={() => { setEditing(true); setEditTitle(task.title); setShowIconPicker(false); }}
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              style={{ background: 'linear-gradient(135deg, hsl(200, 80%, 55%), hsl(220, 70%, 45%))', boxShadow: '0 0 6px hsla(200, 80%, 55%, 0.3)' }}
+              title="Edit"
+            >
+              <Pencil className="w-3.5 h-3.5 text-white" />
+            </button>
+            <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); setShowIconPicker(false); }}
               className="w-7 h-7 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
               title="Bandaids"
             >
               <Bandage className="w-3.5 h-3.5" />
             </button>
-            <button onClick={() => { setShowProblems(!showProblems); setShowBandaids(false); }}
+            <button onClick={() => { setShowProblems(!showProblems); setShowBandaids(false); setShowIconPicker(false); }}
               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               title="Problems"
               style={{
-                background: 'linear-gradient(135deg, hsl(45, 90%, 50%), hsl(30, 80%, 40%))',
-                boxShadow: '0 0 6px hsla(45, 90%, 50%, 0.3)',
+                background: 'linear-gradient(135deg, hsl(50, 100%, 55%), hsl(40, 90%, 45%))',
+                boxShadow: '0 0 6px hsla(50, 100%, 55%, 0.3)',
               }}
             >
-              <AlertTriangle className="w-3.5 h-3.5" />
+              <AlertTriangle className="w-3.5 h-3.5 text-gray-800" />
             </button>
-            <button onClick={() => onDelete(task.id)}
+            <button onClick={() => setConfirmAction({ type: 'deleteTask' })}
               className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               style={{
-                background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 35%))',
+                background: 'linear-gradient(135deg, hsl(0, 70%, 55%), hsl(0, 60%, 40%))',
                 boxShadow: '0 0 6px hsla(0, 80%, 50%, 0.3)',
               }}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-3.5 h-3.5 text-white" />
             </button>
           </div>
         </div>
 
+        {/* Icon picker for editing */}
+        <AnimatePresence>
+          {editing && stickers.length > 0 && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden mt-2">
+              <p className="text-xs text-white/70 mb-1">Tap icons to add/remove:</p>
+              <div className="flex flex-wrap gap-1">
+                {stickers.map(s => {
+                  const selected = (task.iconUrls || []).includes(s.url);
+                  return (
+                    <button key={s.name} type="button" onClick={() => handleToggleIcon(s.url)}
+                      className={`w-8 h-8 rounded-lg p-1 border transition-all ${selected ? 'border-white scale-110' : 'border-white/20'}`}
+                      style={{ background: 'hsla(0,0%,100%,0.1)' }}
+                    >
+                      <img src={s.url} alt="" className="w-full h-full object-contain" />
+                    </button>
+                  );
+                })}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence>
           {showBandaids && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
-              <p className="text-xs text-muted-foreground font-medium">🩹 Bandaids — Ways to get it done</p>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden mt-2">
+              <p className="text-xs text-white/70 font-medium">🩹 Bandaids — Ways to get it done</p>
               {task.bandaids.length > 0 && (
                 <div className="space-y-1">
                   {task.bandaids.map((b, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm p-2 rounded-lg" style={{ background: 'hsl(15, 10%, 10%)' }}>
-                      <span className="flex-1">{b}</span>
-                      <button onClick={() => onRemoveBandaid(task.id, i)} className="hover:text-destructive transition-colors"><X className="w-3 h-3" /></button>
+                    <div key={i} className="flex items-center gap-2 text-sm p-2 rounded-lg" style={{ background: 'hsla(0,0%,100%,0.1)' }}>
+                      <span className="flex-1 text-white">{b}</span>
+                      <button onClick={() => setConfirmAction({ type: 'removeBandaid', payload: i })} className="hover:text-red-300 transition-colors text-white/60"><X className="w-3 h-3" /></button>
                     </div>
                   ))}
                 </div>
               )}
-              {task.bandaids.length === 0 && <p className="text-xs text-muted-foreground italic">No bandaids yet.</p>}
+              {task.bandaids.length === 0 && <p className="text-xs text-white/50 italic">No bandaids yet.</p>}
               <div className="flex gap-2">
-                <input value={newBandaid} onChange={e => setNewBandaid(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddBandaid()} placeholder="Add a bandaid..." className="flex-1 bg-muted border border-border rounded-xl px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary" />
+                <input value={newBandaid} onChange={e => setNewBandaid(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddBandaid()} placeholder="Add a bandaid..." className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50" />
                 <button onClick={handleAddBandaid} className="w-8 h-8 solid-circle shrink-0 hover:scale-110 transition-transform"><Plus className="w-4 h-4" /></button>
               </div>
             </motion.div>
@@ -162,35 +237,35 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
 
         <AnimatePresence>
           {showProblems && (
-            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden">
-              <p className="text-xs text-muted-foreground font-medium">⚠️ Problems & Solutions</p>
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="space-y-2 overflow-hidden mt-2">
+              <p className="text-xs text-white/70 font-medium">⚠️ Problems & Solutions</p>
               {task.problems.length > 0 && (
                 <div className="space-y-1">
                   {task.problems.map((p) => (
-                    <div key={p.id} className="rounded-lg overflow-hidden" style={{ background: 'hsl(15, 10%, 10%)' }}>
+                    <div key={p.id} className="rounded-lg overflow-hidden" style={{ background: 'hsla(0,0%,100%,0.1)' }}>
                       <div
                         onClick={() => setExpandedProblem(expandedProblem === p.id ? null : p.id)}
                         className="w-full flex items-center gap-2 p-3 text-left cursor-pointer"
                       >
-                        {expandedProblem === p.id ? <ChevronDown className="w-3 h-3 shrink-0" /> : <ChevronRight className="w-3 h-3 shrink-0" />}
-                        <span className="flex-1 text-sm">{p.title}</span>
-                        <button type="button" onClick={(e) => { e.stopPropagation(); onRemoveProblem(task.id, p.id); }} className="text-muted-foreground hover:text-destructive shrink-0"><X className="w-3 h-3" /></button>
+                        {expandedProblem === p.id ? <ChevronDown className="w-3 h-3 shrink-0 text-white" /> : <ChevronRight className="w-3 h-3 shrink-0 text-white" />}
+                        <span className="flex-1 text-sm text-white">{p.title}</span>
+                        <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmAction({ type: 'removeProblem', payload: p.id }); }} className="text-white/50 hover:text-red-300 shrink-0"><X className="w-3 h-3" /></button>
                       </div>
                       {expandedProblem === p.id && (
-                        <div className="px-3 pb-3 text-xs text-muted-foreground">
-                          <span className="text-primary font-medium">Solution:</span>
-                          <p className="mt-1">{p.solution}</p>
+                        <div className="px-3 pb-3 text-xs">
+                          <span className="font-medium" style={{ color: 'hsl(45, 100%, 60%)' }}>Solution:</span>
+                          <p className="mt-1 text-white">{p.solution}</p>
                         </div>
                       )}
                     </div>
                   ))}
                 </div>
               )}
-              {task.problems.length === 0 && <p className="text-xs text-muted-foreground italic">No problems added yet.</p>}
+              {task.problems.length === 0 && <p className="text-xs text-white/50 italic">No problems added yet.</p>}
               <div className="space-y-2">
-                <input value={newProblemTitle} onChange={e => setNewProblemTitle(e.target.value)} placeholder="Problem that may occur..." className="w-full bg-muted border border-border rounded-xl px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary" />
+                <input value={newProblemTitle} onChange={e => setNewProblemTitle(e.target.value)} placeholder="Problem that may occur..." className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50" />
                 <div className="flex gap-2">
-                  <input value={newProblemSolution} onChange={e => setNewProblemSolution(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddProblem()} placeholder="Its solution..." className="flex-1 bg-muted border border-border rounded-xl px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary" />
+                  <input value={newProblemSolution} onChange={e => setNewProblemSolution(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddProblem()} placeholder="Its solution..." className="flex-1 bg-white/10 border border-white/20 rounded-xl px-3 py-1.5 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/50" />
                   <button onClick={handleAddProblem} className="w-8 h-8 solid-circle shrink-0 hover:scale-110 transition-transform"><Plus className="w-4 h-4" /></button>
                 </div>
               </div>
@@ -203,9 +278,18 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
         open={showCongrats}
         onClose={() => setShowCongrats(false)}
         taskTitle={task.title}
-        visualizations={visualizations}
+        taskId={task.id}
+        visualizations={taskVisualizations}
         onAddVisualization={onAddVisualization}
         onRemoveVisualization={onRemoveVisualization}
+      />
+
+      <ConfirmDialog
+        open={!!confirmAction}
+        onConfirm={handleConfirm}
+        onCancel={() => setConfirmAction(null)}
+        title={confirmAction?.type === 'deleteTask' ? 'Delete Task?' : 'Remove Item?'}
+        description={confirmAction?.type === 'deleteTask' ? `Are you sure you want to delete "${task.title}"?` : 'Are you sure you want to remove this?'}
       />
     </>
   );

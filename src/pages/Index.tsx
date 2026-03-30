@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, useRef } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, StickyNote, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2 } from 'lucide-react';
+import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
 import StreakOrb from '@/components/StreakOrb';
@@ -23,13 +23,10 @@ const Index = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showChat, setShowChat] = useState(false);
-  const [showNotepad, setShowNotepad] = useState(false);
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const dragOverId = useRef<string | null>(null);
 
-  const handleDragStart = (id: string) => {
-    setDraggedId(id);
-  };
+  const handleDragStart = (id: string) => setDraggedId(id);
 
   const handleDragOver = (e: React.DragEvent, id: string) => {
     e.preventDefault();
@@ -48,7 +45,6 @@ const Index = () => {
     const [moved] = items.splice(fromIdx, 1);
     items.splice(toIdx, 0, moved);
 
-    // If filtered, we need to rebuild the full list with new order
     if (activeSection) {
       const otherTasks = store.tasks.filter(t => t.sectionId !== activeSection);
       store.reorderTasks([...items, ...otherTasks]);
@@ -58,10 +54,6 @@ const Index = () => {
     setDraggedId(null);
     dragOverId.current = null;
   };
-
-  // Touch drag support
-  const touchStartY = useRef(0);
-  const touchStartId = useRef<string | null>(null);
 
   const filteredTasks = useMemo(() => {
     if (!activeSection) return store.tasks;
@@ -95,7 +87,6 @@ const Index = () => {
             </button>
             <h1 className="text-lg font-display text-gradient-fire">EasyFlow</h1>
 
-            {/* Profile Dropdown */}
             <AnimatePresence>
               {showProfile && (
                 <motion.div
@@ -147,12 +138,7 @@ const Index = () => {
                     </div>
                   </div>
                   <div className="p-3 border-t border-border">
-                    <StickerManager
-                      stickers={stickers}
-                      loading={stickersLoading}
-                      onUpload={uploadSticker}
-                      onDelete={deleteSticker}
-                    />
+                    <StickerManager stickers={stickers} loading={stickersLoading} onUpload={uploadSticker} onDelete={deleteSticker} />
                   </div>
                   <div className="p-3 border-t border-border">
                     <button
@@ -181,7 +167,6 @@ const Index = () => {
         </div>
       </div>
 
-      {/* Click-away for profile */}
       {showProfile && (
         <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />
       )}
@@ -232,6 +217,7 @@ const Index = () => {
                     section={store.sections.find(s => s.id === task.sectionId)}
                     onToggle={store.toggleTask}
                     onDelete={store.deleteTask}
+                    onEdit={store.editTask}
                     onAddBandaid={store.addBandaid}
                     onRemoveBandaid={store.removeBandaid}
                     onAddProblem={store.addProblem}
@@ -241,6 +227,7 @@ const Index = () => {
                     onRemoveVisualization={store.removeVisualization}
                     isDragging={draggedId === task.id}
                     dragHandleProps={{}}
+                    stickers={stickers}
                   />
                 </div>
               ))
