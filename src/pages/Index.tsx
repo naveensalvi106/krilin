@@ -152,6 +152,7 @@ const Index = () => {
                       loading={stickersLoading}
                       onUpload={uploadSticker}
                       onDelete={deleteSticker}
+                    />
                   </div>
                   <div className="p-3 border-t border-border">
                     <button
