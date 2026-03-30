@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, ChevronLeft, Pencil, ImagePlus, X, Loader2 } from 'lucide-react';
+import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, Pencil, ImagePlus, X, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
 import StreakOrb from '@/components/StreakOrb';
@@ -45,13 +45,6 @@ const Index = () => {
   const fileRef = useRef<HTMLInputElement>(null);
   const editFileRef = useRef<HTMLInputElement>(null);
 
-  // Touch swipe
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-  const touchEndX = useRef(0);
-  const touchEndY = useRef(0);
-  const touchMoved = useRef(false);
-  const swipeBlocked = useRef(false);
 
   const handleDragStart = (id: string) => setDraggedId(id);
   const handleDragOver = (e: React.DragEvent, id: string) => { e.preventDefault(); dragOverId.current = id; };
@@ -66,54 +59,6 @@ const Index = () => {
     store.reorderTasks(items);
     setDraggedId(null);
     dragOverId.current = null;
-  };
-
-  // Swipe navigation
-  const allTabs = [null, ...store.customSections.map(cs => cs.id)];
-  const currentTabIndex = allTabs.indexOf(activeTab);
-
-  const isInteractiveTarget = (target: EventTarget | null) => {
-    if (!(target instanceof Element)) return false;
-    return !!target.closest('button, input, textarea, select, a, label, [role="button"], [role="dialog"], [data-no-swipe], [contenteditable="true"]');
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchStartX.current = touch.clientX;
-    touchStartY.current = touch.clientY;
-    touchEndX.current = touch.clientX;
-    touchEndY.current = touch.clientY;
-    touchMoved.current = false;
-    swipeBlocked.current = isInteractiveTarget(e.target);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchEndX.current = touch.clientX;
-    touchEndY.current = touch.clientY;
-
-    if (
-      Math.abs(touchEndX.current - touchStartX.current) > 6 ||
-      Math.abs(touchEndY.current - touchStartY.current) > 6
-    ) {
-      touchMoved.current = true;
-    }
-  };
-
-  const handleTouchEnd = () => {
-    if (swipeBlocked.current || !touchMoved.current) return;
-
-    const deltaX = touchStartX.current - touchEndX.current;
-    const deltaY = Math.abs(touchStartY.current - touchEndY.current);
-    const absDeltaX = Math.abs(deltaX);
-
-    if (absDeltaX < 80 || absDeltaX < deltaY * 1.5) return;
-
-    if (deltaX > 0 && currentTabIndex < allTabs.length - 1) {
-      setActiveTab(allTabs[currentTabIndex + 1]);
-    } else if (deltaX < 0 && currentTabIndex > 0) {
-      setActiveTab(allTabs[currentTabIndex - 1]);
-    }
   };
 
   // Section helpers
@@ -239,9 +184,7 @@ const Index = () => {
 
       {showProfile && <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />}
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)]"
-        onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}
-      >
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)]">
         {/* StreakOrb - only on All Tasks tab */}
         {activeTab === null && (() => {
           const nextTask = store.tasks.find(t => !t.completed);
@@ -289,13 +232,13 @@ const Index = () => {
 
             <div className="space-y-3">
               <div className="flex items-center gap-0 overflow-x-auto pb-1 scrollbar-none">
-                <h2 className="font-display text-sm text-gradient-fire whitespace-nowrap shrink-0 cursor-pointer px-2 py-1" onClick={() => setActiveTab(null)}>All Tasks</h2>
+                <h2 className="font-display text-sm text-gradient-fire whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 border-b-2 border-primary" onClick={() => setActiveTab(null)}>All Tasks</h2>
 
                 {store.customSections.map((cs) => (
                   <React.Fragment key={cs.id}>
                     <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
                     <h2
-                      className="font-display text-sm text-gradient-fire whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 flex items-center gap-1.5"
+                      className="font-display text-sm text-muted-foreground whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 flex items-center gap-1.5 hover:text-foreground transition-colors"
                       onClick={() => setActiveTab(cs.id)}
                     >
                       {cs.iconUrl && <img src={cs.iconUrl} alt="" className="w-4 h-4 object-contain rounded" />}
@@ -355,19 +298,7 @@ const Index = () => {
 
         {/* ====== CUSTOM SECTION TAB ====== */}
         {activeTab !== null && activeCustomSection && (
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-4"
-          >
-            {/* Back arrow */}
-            <button onClick={() => setActiveTab(null)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium text-foreground hover:scale-105 transition-transform"
-              style={{ background: 'hsl(15, 10%, 12%)', border: '1px solid hsl(15, 15%, 20%)' }}>
-              <ChevronLeft className="w-4 h-4" />
-              Back
-            </button>
-
+          <>
             {/* Section header with edit controls */}
             <div className="flex items-center gap-3">
               {activeCustomSection.iconUrl ? (
@@ -406,38 +337,72 @@ const Index = () => {
               </div>
             </div>
 
-            {/* Task count */}
-            <div className="text-xs text-muted-foreground">
-              {activeSectionTasks.filter(t => t.completed).length}/{activeSectionTasks.length} done
-            </div>
-
-            {/* Tasks in this section */}
+            {/* Tab bar - same as All Tasks but with this section active */}
             <div className="space-y-3">
-              {activeSectionTasks.length === 0 ? (
-                <div className="glass-panel bevel p-8 text-center">
-                  <p className="text-muted-foreground text-sm">No tasks in this section yet.</p>
-                </div>
-              ) : (
-                activeSectionTasks.map(task => (
-                  <TaskCard
-                    key={task.id}
-                    task={task}
-                    section={{ id: activeCustomSection.id, name: activeCustomSection.name, icon: '', color: activeSectionColor }}
-                    onToggle={store.toggleTask}
-                    onDelete={store.deleteTask}
-                    onEdit={store.editTask}
-                    onAddBandaid={store.addBandaid}
-                    onRemoveBandaid={store.removeBandaid}
-                    onAddProblem={store.addProblem}
-                    onRemoveProblem={store.removeProblem}
-                    visualizations={store.visualizations}
-                    onAddVisualization={store.addVisualization}
-                    onRemoveVisualization={store.removeVisualization}
-                    stickers={stickers}
-                    dragHandleProps={{}}
-                  />
-                ))
-              )}
+              <div className="flex items-center gap-0 overflow-x-auto pb-1 scrollbar-none">
+                <h2 className="font-display text-sm text-muted-foreground whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 hover:text-foreground transition-colors" onClick={() => setActiveTab(null)}>All Tasks</h2>
+
+                {store.customSections.map((cs) => (
+                  <React.Fragment key={cs.id}>
+                    <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
+                    <h2
+                      className={`font-display text-sm whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 flex items-center gap-1.5 transition-colors ${cs.id === activeTab ? 'text-gradient-fire border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
+                      onClick={() => setActiveTab(cs.id)}
+                    >
+                      {cs.iconUrl && <img src={cs.iconUrl} alt="" className="w-4 h-4 object-contain rounded" />}
+                      {cs.name}
+                    </h2>
+                  </React.Fragment>
+                ))}
+
+                <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
+
+                <button
+                  onClick={() => setShowAddSection(true)}
+                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform ml-1"
+                  style={{
+                    background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
+                    boxShadow: '0 0 10px hsl(35 100% 50% / 0.3)',
+                  }}
+                  title="Add Section"
+                >
+                  <Plus className="w-3.5 h-3.5 text-white" />
+                </button>
+
+                <span className="text-xs text-muted-foreground ml-auto shrink-0">{activeSectionTasks.filter(t => t.completed).length}/{activeSectionTasks.length} done</span>
+              </div>
+
+              {/* Tasks in this section */}
+              <div className="space-y-3">
+                {activeSectionTasks.length === 0 ? (
+                  <div className="glass-panel bevel p-8 text-center">
+                    <p className="text-muted-foreground text-sm">No tasks in this section yet.</p>
+                  </div>
+                ) : (
+                  activeSectionTasks.map(task => (
+                    <div key={task.id} draggable onDragStart={() => handleDragStart(task.id)} onDragOver={(e) => handleDragOver(e, task.id)} onDragEnd={handleDragEnd}
+                      className={`transition-opacity ${draggedId === task.id ? 'opacity-50' : ''}`}>
+                      <TaskCard
+                        task={task}
+                        section={{ id: activeCustomSection.id, name: activeCustomSection.name, icon: '', color: activeSectionColor }}
+                        onToggle={store.toggleTask}
+                        onDelete={store.deleteTask}
+                        onEdit={store.editTask}
+                        onAddBandaid={store.addBandaid}
+                        onRemoveBandaid={store.removeBandaid}
+                        onAddProblem={store.addProblem}
+                        onRemoveProblem={store.removeProblem}
+                        visualizations={store.visualizations}
+                        onAddVisualization={store.addVisualization}
+                        onRemoveVisualization={store.removeVisualization}
+                        stickers={stickers}
+                        isDragging={draggedId === task.id}
+                        dragHandleProps={{}}
+                      />
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
 
             {/* Quick add task */}
@@ -457,10 +422,7 @@ const Index = () => {
                 <Plus className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Swipe hint */}
-            <p className="text-center text-[10px] text-muted-foreground/50">← Swipe to navigate between sections →</p>
-          </motion.div>
+          </>
         )}
       </div>
 
