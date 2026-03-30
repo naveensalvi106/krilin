@@ -313,8 +313,12 @@ export function useAppStore() {
 
   const reorderTasks = useCallback(async (reorderedTasks: Task[]) => {
     const updated = reorderedTasks.map((t, i) => ({ ...t, sortOrder: i }));
+    // Sort: incomplete first, completed last
+    updated.sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      return a.sortOrder - b.sortOrder;
+    });
     setData(d => ({ ...d, tasks: updated }));
-    // Persist sort orders
     for (const t of updated) {
       supabase.from('tasks').update({ sort_order: t.sortOrder } as any).eq('id', t.id).then();
     }
