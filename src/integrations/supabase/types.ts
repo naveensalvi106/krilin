@@ -38,6 +38,30 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_sections: {
+        Row: {
+          created_at: string
+          icon_url: string | null
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          icon_url?: string | null
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notepad_sections: {
         Row: {
           content: string
@@ -196,6 +220,7 @@ export type Database = {
           bandaids: string[] | null
           completed: boolean
           created_at: string
+          custom_section_id: string | null
           icon_url: string | null
           icon_urls: string[] | null
           id: string
@@ -210,6 +235,7 @@ export type Database = {
           bandaids?: string[] | null
           completed?: boolean
           created_at?: string
+          custom_section_id?: string | null
           icon_url?: string | null
           icon_urls?: string[] | null
           id?: string
@@ -224,6 +250,7 @@ export type Database = {
           bandaids?: string[] | null
           completed?: boolean
           created_at?: string
+          custom_section_id?: string | null
           icon_url?: string | null
           icon_urls?: string[] | null
           id?: string
@@ -234,7 +261,15 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "tasks_custom_section_id_fkey"
+            columns: ["custom_section_id"]
+            isOneToOne: false
+            referencedRelation: "custom_sections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       visualizations: {
         Row: {
