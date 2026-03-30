@@ -87,6 +87,9 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
           <button onClick={handleToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground hover:border-primary'}`}>
             {task.completed && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
           </button>
+          {task.iconUrl && (
+            <img src={task.iconUrl} alt="" className="w-5 h-5 object-contain shrink-0" />
+          )}
           <span className={`flex-1 font-medium text-sm min-w-0 truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
             {task.title}
           </span>
