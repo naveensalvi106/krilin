@@ -114,16 +114,16 @@ const Notepad = () => {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="w-10 h-10 solid-circle hover:scale-110 transition-transform" title="Notepad">
+      <button onClick={() => setOpen(true)} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Notepad">
         <StickyNote className="w-5 h-5" />
       </button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setOpen(false)}>
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="glass-panel-accent bevel w-full max-w-lg mx-4 max-h-[80vh] flex flex-col"
+            className="glass-panel-accent bevel w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden"
             onClick={e => e.stopPropagation()}
           >
             <input type="file" ref={fileRef} className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
