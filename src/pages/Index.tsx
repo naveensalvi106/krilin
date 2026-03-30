@@ -108,7 +108,15 @@ const Index = () => {
       {showProfile && <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />}
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <StreakOrb percent={store.streakPercent} isGolden={store.isGolden} streak={store.currentStreak} completedCount={store.completedCount} totalCount={store.totalCount} />
+        {(() => {
+          const nextTask = store.tasks.find(t => !t.completed);
+          const nextTaskSection = nextTask ? store.sections.find(s => s.id === nextTask.sectionId) : undefined;
+          return (
+            <StreakOrb percent={store.streakPercent} isGolden={store.isGolden} streak={store.currentStreak}
+              completedCount={store.completedCount} totalCount={store.totalCount}
+              nextTask={nextTask} nextTaskSection={nextTaskSection} />
+          );
+        })()}
 
         <AddTaskForm sections={store.sections} stickers={stickers} onAdd={store.addTask} />
 
