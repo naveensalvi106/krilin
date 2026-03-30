@@ -298,6 +298,15 @@ export function useAppStore() {
     setData(d => ({ ...d, visualizations: d.visualizations.filter(v => v.id !== id) }));
   }, []);
 
+  const reorderTasks = useCallback(async (reorderedTasks: Task[]) => {
+    const updated = reorderedTasks.map((t, i) => ({ ...t, sortOrder: i }));
+    setData(d => ({ ...d, tasks: updated }));
+    // Persist sort orders
+    for (const t of updated) {
+      supabase.from('tasks').update({ sort_order: t.sortOrder } as any).eq('id', t.id).then();
+    }
+  }, []);
+
   const today = new Date().toISOString().split('T')[0];
   const completedCount = data.tasks.filter(t => t.completed).length;
   const totalCount = data.tasks.length;
@@ -326,6 +335,7 @@ export function useAppStore() {
     removeRevivalStep,
     addVisualization,
     removeVisualization,
+    reorderTasks,
     today,
     completedCount,
     totalCount,
