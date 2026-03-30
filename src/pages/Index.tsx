@@ -338,6 +338,12 @@ const Index = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
+            {/* Back arrow */}
+            <button onClick={() => setActiveTab(null)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-1">
+              <ChevronLeft className="w-5 h-5" />
+              <span className="text-xs font-medium">Back</span>
+            </button>
+
             {/* Section header with edit controls */}
             <div className="flex items-center gap-3">
               {activeCustomSection.iconUrl ? (
