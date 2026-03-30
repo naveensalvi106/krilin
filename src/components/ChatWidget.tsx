@@ -231,7 +231,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
               </div>
               <div className="flex items-center gap-1.5">
                 {messages.length > 0 && (
-                  <button onClick={clearHistory} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(15, 10%, 14%)' }} title="Clear chat">
+                  <button onClick={() => { setConfirmClear(true); playWarning(); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(15, 10%, 14%)' }} title="Clear chat">
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 )}
