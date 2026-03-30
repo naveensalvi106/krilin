@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, ChevronLeft, Pencil, ImagePlus, X, Loader2 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
@@ -253,39 +253,27 @@ const Index = () => {
             <AddTaskForm sections={store.sections} stickers={stickers} onAdd={store.addTask} />
 
             <div className="space-y-3">
-              <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                <h2 className="font-display text-sm text-gradient-fire whitespace-nowrap shrink-0 cursor-pointer" onClick={() => setActiveTab(null)}
-                  style={activeTab === null ? { opacity: 1 } : { opacity: 0.5 }}>All Tasks</h2>
+              <div className="flex items-center gap-0 overflow-x-auto pb-1 scrollbar-none">
+                <h2 className="font-display text-sm text-gradient-fire whitespace-nowrap shrink-0 cursor-pointer px-2 py-1" onClick={() => setActiveTab(null)}>All Tasks</h2>
 
-                {store.customSections.map((cs, idx) => {
-                  const color = SECTION_COLORS[idx % SECTION_COLORS.length];
-                  const hue = color.split(' ')[0];
-                  const sat = color.split(' ')[1];
-                  const isActive = activeTab === cs.id;
-                  return (
-                    <button
-                      key={cs.id}
-                      onClick={() => setActiveTab(isActive ? null : cs.id)}
-                      className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold whitespace-nowrap transition-all shrink-0"
-                      style={isActive ? {
-                        background: `linear-gradient(135deg, hsl(${hue} ${sat} 55%), hsl(${hue} ${sat} 40%))`,
-                        color: 'white',
-                        boxShadow: `0 0 12px hsl(${hue} ${sat} 50% / 0.4)`,
-                      } : {
-                        background: 'hsl(15, 10%, 12%)',
-                        border: '1px solid hsl(15, 15%, 20%)',
-                        color: 'hsl(25, 10%, 55%)',
-                      }}
+                {store.customSections.map((cs) => (
+                  <React.Fragment key={cs.id}>
+                    <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
+                    <h2
+                      className="font-display text-sm text-gradient-fire whitespace-nowrap shrink-0 cursor-pointer px-2 py-1 flex items-center gap-1.5"
+                      onClick={() => setActiveTab(cs.id)}
                     >
                       {cs.iconUrl && <img src={cs.iconUrl} alt="" className="w-4 h-4 object-contain rounded" />}
                       {cs.name}
-                    </button>
-                  );
-                })}
+                    </h2>
+                  </React.Fragment>
+                ))}
+
+                <div className="w-px h-4 shrink-0" style={{ background: 'hsl(var(--border))' }} />
 
                 <button
                   onClick={() => setShowAddSection(true)}
-                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform"
+                  className="w-6 h-6 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform ml-1"
                   style={{
                     background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
                     boxShadow: '0 0 10px hsl(35 100% 50% / 0.3)',
