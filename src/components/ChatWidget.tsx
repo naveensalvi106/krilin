@@ -29,14 +29,46 @@ interface ChatWidgetProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, onDeleteTask }: ChatWidgetProps) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history on first open
+  useEffect(() => {
+    if (!open || historyLoaded || !user) return;
+    const load = async () => {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (data && data.length > 0) {
+        setMessages(data.map(d => ({ role: d.role as 'user' | 'assistant', content: d.content })));
+      }
+      setHistoryLoaded(true);
+    };
+    load();
+  }, [open, historyLoaded, user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
+
+  const saveMessage = useCallback(async (role: string, content: string) => {
+    if (!user) return;
+    await supabase.from('chat_messages').insert({ user_id: user.id, role, content } as any);
+  }, [user]);
+
+  const clearHistory = useCallback(async () => {
+    if (!user) return;
+    await supabase.from('chat_messages').delete().eq('user_id', user.id);
+    setMessages([]);
+    toast.success('Chat history cleared');
+  }, [user]);
 
   const handleToolCalls = async (toolCalls: ToolCall[]) => {
     for (const tc of toolCalls) {
