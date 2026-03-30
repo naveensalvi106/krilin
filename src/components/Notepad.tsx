@@ -220,7 +220,8 @@ const Notepad = () => {
                 </>
               )}
             </div>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
       )}
 
