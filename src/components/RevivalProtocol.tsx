@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, ExternalLink, ChevronRight, Plus, X, Play, ShieldCheck, Link, Type } from 'lucide-react';
 import type { RevivalVideo, RevivalStep } from '@/lib/store';
 import ConfirmDialog from './ConfirmDialog';
+import { playOpen, playClose, playClick, playComplete, playDelete, playAddTask, playSurvived } from '@/lib/sounds';
 
 interface RevivalProtocolProps {
   revivalVideos: RevivalVideo[];
@@ -32,19 +33,24 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
   const toggleStep = (id: string) => {
     setCompletedSteps(prev => {
       const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
+      if (next.has(id)) { next.delete(id); } 
+      else { next.add(id); playComplete(); }
       return next;
     });
   };
 
+  const prevSurvivedRef = useRef(false);
+  useEffect(() => {
+    if (survived && !prevSurvivedRef.current) playSurvived();
+    prevSurvivedRef.current = survived;
+  }, [survived]);
+
   const handleAddVideo = () => {
     if (videoTitle.trim() && videoUrl.trim()) {
       onAddVideo({ title: videoTitle.trim(), url: videoUrl.trim(), channel: videoChannel.trim() || 'Custom' });
-      setVideoTitle('');
-      setVideoUrl('');
-      setVideoChannel('');
+      setVideoTitle(''); setVideoUrl(''); setVideoChannel('');
       setShowAddVideo(false);
+      playAddTask();
     }
   };
 
@@ -53,6 +59,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
       onAddStep(stepText.trim());
       setStepText('');
       setShowAddStep(false);
+      playAddTask();
     }
   };
 
@@ -66,7 +73,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
   if (!active) {
     return (
       <button
-        onClick={() => setActive(true)}
+      onClick={() => { setActive(true); playOpen(); }}
         className="w-full glass-panel bevel p-5 flex items-center gap-4 group transition-all"
       >
         <ShieldAlert className="w-6 h-6 icon-glow text-primary" />
@@ -82,7 +89,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
     <div className="glass-panel-accent bevel p-5 space-y-5">
       <div className="flex items-center justify-between">
         <h3 className="font-display text-sm text-gradient-fire flex items-center gap-2"><ShieldAlert className="w-5 h-5 icon-glow" /> Revival Protocol</h3>
-        <button onClick={() => { setActive(false); setCompletedSteps(new Set()); }} className="text-xs text-muted-foreground hover:text-foreground">Close</button>
+        <button onClick={() => { setActive(false); setCompletedSteps(new Set()); playClose(); }} className="text-xs text-muted-foreground hover:text-foreground">Close</button>
       </div>
 
       <div className="flex flex-col items-center gap-2">

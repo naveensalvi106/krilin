@@ -13,7 +13,7 @@ import StickerManager, { useStickers } from '@/components/StickerManager';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
-import { playTab, playOpen, playClick, playDelete, playAddTask } from '@/lib/sounds';
+import { playTab, playOpen, playClick, playDelete, playAddTask, playClose } from '@/lib/sounds';
 
 const Index = () => {
   const store = useAppStore();
@@ -87,7 +87,7 @@ const Index = () => {
       <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-border" style={{ background: 'hsla(15, 5%, 4%, 0.85)' }}>
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative">
-            <button onClick={() => setShowProfile(!showProfile)} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Profile">
+            <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Profile">
               <Zap className="w-5 h-5" />
             </button>
             <h1 className="text-lg font-display text-gradient-fire">EasyFlow</h1>
@@ -136,7 +136,7 @@ const Index = () => {
             </AnimatePresence>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setShowChat(true)} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="AI Assistant">
+            <button onClick={() => { setShowChat(true); playOpen(); }} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="AI Assistant">
               <Bot className="w-5 h-5" />
             </button>
             <Notepad />
@@ -276,7 +276,7 @@ const Index = () => {
         description="This will delete the section and all its tasks. Are you sure?"
       />
 
-      <ChatWidget open={showChat} onClose={() => setShowChat(false)} sections={store.sections} tasks={store.tasks}
+      <ChatWidget open={showChat} onClose={() => { setShowChat(false); playClose(); }} sections={store.sections} tasks={store.tasks}
         onAddTask={store.addTask} onToggleTask={store.toggleTask} onDeleteTask={store.deleteTask} />
     </div>
   );
