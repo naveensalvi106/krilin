@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { PartyPopper, X, Plus, Sparkles, Pencil, ImagePlus } from 'lucide-react';
 import type { Visualization } from '@/lib/store';
 import ConfirmDialog from './ConfirmDialog';
+import { playClick, playDelete } from '@/lib/sounds';
 
 interface CongratulateModalProps {
   open: boolean;
@@ -35,6 +36,7 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
       onAddVisualization(newText.trim() || 'Vision Board Image', previewImg || undefined, taskId);
       setNewText('');
       setPreviewImg(null);
+      playClick();
     }
   };
 

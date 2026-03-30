@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Section, Task } from '@/lib/store';
+import ConfirmDialog from './ConfirmDialog';
+import { playOpen, playClose, playSend, playReceive, playWarning, playClick } from '@/lib/sounds';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
@@ -34,6 +36,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [historyLoaded, setHistoryLoaded] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Load chat history on first open
@@ -130,6 +133,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
     setMessages(prev => [...prev, userMsg]);
     saveMessage('user', text);
     setLoading(true);
+    playSend();
 
     try {
       const resp = await fetch(CHAT_URL, {
@@ -160,6 +164,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
         if (textContent) {
           setMessages(prev => [...prev, { role: 'assistant', content: textContent }]);
           saveMessage('assistant', textContent);
+          playReceive();
         } else {
           // Generate a follow-up without tool calls
           const followUp = await fetch(CHAT_URL, {
@@ -184,12 +189,14 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             if (fContent) {
               setMessages(prev => [...prev, { role: 'assistant', content: fContent }]);
               saveMessage('assistant', fContent);
+              playReceive();
             }
           }
         }
       } else if (choice?.message?.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: choice.message.content }]);
         saveMessage('assistant', choice.message.content);
+        playReceive();
       }
     } catch (e: any) {
       toast.error(e.message || 'Chat error');
@@ -205,6 +212,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
   ];
 
   return (
+    <>
     <AnimatePresence>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
@@ -224,7 +232,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
               </div>
               <div className="flex items-center gap-1.5">
                 {messages.length > 0 && (
-                  <button onClick={clearHistory} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(15, 10%, 14%)' }} title="Clear chat">
+                  <button onClick={() => { setConfirmClear(true); playWarning(); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(15, 10%, 14%)' }} title="Clear chat">
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 )}
@@ -304,6 +312,15 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
         </div>
       )}
     </AnimatePresence>
+
+    <ConfirmDialog
+      open={confirmClear}
+      onConfirm={() => { clearHistory(); setConfirmClear(false); }}
+      onCancel={() => setConfirmClear(false)}
+      title="Clear Chat History?"
+      description="This will permanently delete all your chat messages with EasyFlow AI. Are you sure?"
+    />
+    </>
   );
 };
 

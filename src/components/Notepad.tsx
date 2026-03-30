@@ -5,6 +5,7 @@ import { StickyNote, X, Plus, FolderOpen, ImagePlus, Trash2 } from 'lucide-react
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import ConfirmDialog from './ConfirmDialog';
+import { playOpen, playClose, playClick, playDelete, playAddTask } from '@/lib/sounds';
 
 interface NoteSection {
   id: string;
@@ -73,6 +74,7 @@ const Notepad = () => {
       const newSec = { id: inserted.id, name: inserted.name, content: inserted.content, images: inserted.images || [] };
       setSections([...sections, newSec]);
       setActiveId(newSec.id);
+      playAddTask();
     }
     setNewSectionName('');
     setShowAddSection(false);
@@ -84,6 +86,7 @@ const Notepad = () => {
     const updated = sections.filter(s => s.id !== id);
     setSections(updated);
     if (activeId === id) setActiveId(updated[0].id);
+    playDelete();
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -239,7 +242,7 @@ const Notepad = () => {
 
   return (
     <>
-      <button onClick={() => setOpen(true)} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Notepad">
+      <button onClick={() => { setOpen(true); playOpen(); }} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Notepad">
         <StickyNote className="w-5 h-5" />
       </button>
       {modal}
