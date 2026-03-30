@@ -10,7 +10,7 @@ interface TaskCardProps {
   section?: Section;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (id: string, updates: { title?: string; iconUrls?: string[] }) => void;
+  onEdit: (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null }) => void;
   onAddBandaid: (taskId: string, bandaid: string) => void;
   onRemoveBandaid: (taskId: string, index: number) => void;
   onAddProblem: (taskId: string, title: string, solution: string) => void;
@@ -34,6 +34,8 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
   const [editing, setEditing] = useState(false);
   const [editTitle, setEditTitle] = useState(task.title);
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editTime, setEditTime] = useState(task.reminderTime || '');
 
   // Confirm dialog state
   const [confirmAction, setConfirmAction] = useState<{ type: string; payload?: any } | null>(null);

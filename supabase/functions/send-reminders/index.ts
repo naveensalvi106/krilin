@@ -36,10 +36,13 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Strip any Base64 padding characters that would cause VAPID validation failure
+    const cleanPrivateKey = vapidPrivateKey.trim().replace(/=+$/, '');
+    
     webpush.setVapidDetails(
       "mailto:noreply@example.com",
       VAPID_PUBLIC_KEY,
-      vapidPrivateKey.trim()
+      cleanPrivateKey
     );
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
