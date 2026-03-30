@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Flame, Calendar, Trophy, ArrowRight } from 'lucide-react';
 import type { Task, Section } from '@/lib/store';
-import fireOrbGif from '@/assets/fire-orb.gif';
+
 
 interface StreakOrbProps {
   percent: number;
@@ -23,45 +23,44 @@ const StreakOrb = ({ percent, isGolden, streak, completedCount, totalCount, next
 
   return (
     <div className="space-y-3">
-      {/* Day count hero with fire GIF */}
-      <div className="glass-panel-accent bevel px-4 py-4 flex items-center gap-4">
-        {/* Fire GIF orb */}
-        <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
-          <img src={fireOrbGif} alt="Fire" className="w-20 h-20 object-contain" />
-          {/* Progress ring around fire */}
-          <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r="45" fill="none" stroke="hsl(15, 10%, 12%)" strokeWidth="4" opacity="0.3" />
+      {/* Compact stats row */}
+      <div className="glass-panel-accent bevel px-4 py-3 flex items-center gap-3">
+        {/* Mini orb */}
+        <div className="relative w-14 h-14 shrink-0">
+          <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(15, 10%, 12%)" strokeWidth="8" />
             <motion.circle
-              cx="50" cy="50" r="45" fill="none"
-              stroke={isGolden ? 'url(#goldGradOrb)' : 'url(#fireGradOrb)'}
-              strokeWidth="4" strokeLinecap="round"
-              strokeDasharray={283}
-              initial={{ strokeDashoffset: 283 }}
-              animate={{ strokeDashoffset: 283 - (283 * percent) / 100 }}
+              cx="50" cy="50" r="42" fill="none"
+              stroke={isGolden ? 'url(#goldGradCompact)' : 'url(#fireGradCompact)'}
+              strokeWidth="8" strokeLinecap="round"
+              strokeDasharray={264}
+              initial={{ strokeDashoffset: 264 }}
+              animate={{ strokeDashoffset: 264 - (264 * percent) / 100 }}
               transition={{ duration: 1, ease: 'easeOut' }}
             />
             <defs>
-              <linearGradient id="fireGradOrb" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="fireGradCompact" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="hsl(45, 100%, 60%)" />
                 <stop offset="100%" stopColor="hsl(25, 90%, 50%)" />
               </linearGradient>
-              <linearGradient id="goldGradOrb" x1="0%" y1="0%" x2="100%" y2="100%">
+              <linearGradient id="goldGradCompact" x1="0%" y1="0%" x2="100%" y2="100%">
                 <stop offset="0%" stopColor="hsl(45, 100%, 65%)" />
                 <stop offset="100%" stopColor="hsl(35, 100%, 45%)" />
               </linearGradient>
             </defs>
           </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={`text-sm font-display font-bold ${isGolden ? 'text-gradient-gold' : 'text-gradient-fire'}`}>
+              {percent}%
+            </span>
+            {isGolden && <Trophy className="w-3 h-3 text-yellow-400" />}
+          </div>
         </div>
 
-        {/* Day info */}
+        {/* Stats with big day count */}
         <div className="flex-1 min-w-0">
-          {/* Big day count */}
-          <motion.div
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="mb-1"
-          >
-            <span className="text-4xl font-display font-black"
+          <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
+            <span className="text-3xl font-display font-black"
               style={{
                 background: 'linear-gradient(135deg, hsl(50, 100%, 65%), hsl(40, 100%, 55%), hsl(25, 100%, 50%), hsl(15, 90%, 48%))',
                 WebkitBackgroundClip: 'text',
@@ -72,17 +71,14 @@ const StreakOrb = ({ percent, isGolden, streak, completedCount, totalCount, next
               Day {streak || 1}
             </span>
           </motion.div>
-
-          <div className="flex items-center gap-2 text-xs text-muted-foreground mb-1">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar className="w-3 h-3" />
             <span>{dayName}</span>
             <span className="text-foreground font-medium">{dateStr}</span>
-          </div>
-          <div className="flex items-center gap-4 text-xs">
-            <span className="text-muted-foreground">{percent}%</span>
-            <span><span className="text-gradient-fire font-bold">{completedCount}</span> <span className="text-muted-foreground">Done</span></span>
-            <span><span className="text-foreground font-bold">{totalCount}</span> <span className="text-muted-foreground">Total</span></span>
-            {isGolden && <Trophy className="w-3.5 h-3.5 text-yellow-400" />}
+            <span className="ml-auto flex items-center gap-1">
+              <Flame className="w-3 h-3 icon-glow" />
+              <span className="text-gradient-fire font-bold">{completedCount}</span>/{totalCount}
+            </span>
           </div>
         </div>
       </div>
