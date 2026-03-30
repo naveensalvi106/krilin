@@ -47,7 +47,10 @@ const Index = () => {
 
   // Touch swipe
   const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
   const touchEndX = useRef(0);
+  const touchEndY = useRef(0);
+  const swipeBlocked = useRef(false);
 
   const handleDragStart = (id: string) => setDraggedId(id);
   const handleDragOver = (e: React.DragEvent, id: string) => { e.preventDefault(); dragOverId.current = id; };
@@ -68,16 +71,39 @@ const Index = () => {
   const allTabs = [null, ...store.customSections.map(cs => cs.id)];
   const currentTabIndex = allTabs.indexOf(activeTab);
 
-  const handleTouchStart = (e: React.TouchEvent) => { touchStartX.current = e.touches[0].clientX; touchEndX.current = e.touches[0].clientX; };
-  const handleTouchMove = (e: React.TouchEvent) => { touchEndX.current = e.touches[0].clientX; };
+  const isInteractiveTarget = (target: EventTarget | null) => {
+    if (!(target instanceof HTMLElement)) return false;
+    return !!target.closest('button, input, textarea, select, a, [role="button"], [data-no-swipe], [contenteditable="true"]');
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+    touchEndX.current = touch.clientX;
+    touchEndY.current = touch.clientY;
+    swipeBlocked.current = isInteractiveTarget(e.target);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchEndX.current = touch.clientX;
+    touchEndY.current = touch.clientY;
+  };
+
   const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current;
-    if (Math.abs(diff) > 60) {
-      if (diff > 0 && currentTabIndex < allTabs.length - 1) {
-        setActiveTab(allTabs[currentTabIndex + 1]);
-      } else if (diff < 0 && currentTabIndex > 0) {
-        setActiveTab(allTabs[currentTabIndex - 1]);
-      }
+    if (swipeBlocked.current) return;
+
+    const deltaX = touchStartX.current - touchEndX.current;
+    const deltaY = Math.abs(touchStartY.current - touchEndY.current);
+    const absDeltaX = Math.abs(deltaX);
+
+    if (absDeltaX < 80 || absDeltaX < deltaY * 1.5) return;
+
+    if (deltaX > 0 && currentTabIndex < allTabs.length - 1) {
+      setActiveTab(allTabs[currentTabIndex + 1]);
+    } else if (deltaX < 0 && currentTabIndex > 0) {
+      setActiveTab(allTabs[currentTabIndex - 1]);
     }
   };
 
