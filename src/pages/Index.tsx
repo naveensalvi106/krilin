@@ -339,9 +339,14 @@ const Index = () => {
             className="space-y-4"
           >
             {/* Back arrow */}
-            <button onClick={() => setActiveTab(null)} className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors mb-1">
-              <ChevronLeft className="w-5 h-5" />
-              <span className="text-xs font-medium">Back</span>
+            <button onClick={() => setActiveTab(null)} className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-medium hover:scale-105 transition-transform"
+              style={{
+                background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
+                color: 'white',
+                boxShadow: '0 0 12px hsl(35 100% 50% / 0.3)',
+              }}>
+              <ChevronLeft className="w-4 h-4" />
+              Back
             </button>
 
             {/* Section header with edit controls */}
