@@ -311,6 +311,15 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
         </div>
       )}
     </AnimatePresence>
+
+    <ConfirmDialog
+      open={confirmClear}
+      onConfirm={() => { clearHistory(); setConfirmClear(false); }}
+      onCancel={() => setConfirmClear(false)}
+      title="Clear Chat History?"
+      description="This will permanently delete all your chat messages with EasyFlow AI. Are you sure?"
+    />
+    </>
   );
 };
 
