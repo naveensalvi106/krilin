@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import type { Task, Section } from '@/lib/store';
 import CongratulateModal from './CongratulateModal';
 import type { Visualization } from '@/lib/store';
@@ -17,9 +17,11 @@ interface TaskCardProps {
   visualizations: Visualization[];
   onAddVisualization: (text: string, image?: string) => void;
   onRemoveVisualization: (id: string) => void;
+  isDragging?: boolean;
+  dragHandleProps?: Record<string, any>;
 }
 
-const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization }: TaskCardProps) => {
+const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps }: TaskCardProps) => {
   const [showBandaids, setShowBandaids] = useState(false);
   const [showProblems, setShowProblems] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
@@ -50,10 +52,35 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
     }
   };
 
+  const sectionColor = section?.color || '25 95% 53%';
+  const hue = sectionColor.split(' ')[0];
+
   return (
     <>
-      <motion.div layout className={`glass-panel bevel p-4 space-y-3 ${task.completed ? 'opacity-60' : ''}`}>
+      <motion.div
+        layout
+        className={`relative rounded-2xl p-4 pl-5 space-y-3 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'shadow-2xl scale-[1.02]' : ''}`}
+        style={{
+          background: `linear-gradient(135deg, hsla(${sectionColor}, 0.08), hsla(${sectionColor}, 0.03))`,
+          border: `1px solid hsla(${sectionColor}, 0.25)`,
+          boxShadow: isDragging
+            ? `0 0 25px hsla(${sectionColor}, 0.3)`
+            : `0 0 12px hsla(${sectionColor}, 0.08)`,
+        }}
+      >
+        {/* Left accent bar */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
+          style={{
+            background: `linear-gradient(180deg, hsl(${sectionColor}), hsl(${hue} 60% 35%))`,
+            boxShadow: `0 0 8px hsla(${sectionColor}, 0.4)`,
+          }}
+        />
         <div className="flex items-center gap-3">
+          {/* Drag Handle */}
+          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors">
+            <GripVertical className="w-4 h-4" />
+          </div>
           <button onClick={handleToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground hover:border-primary'}`}>
             {task.completed && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
           </button>

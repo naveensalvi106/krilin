@@ -18,6 +18,7 @@ export interface Task {
   problems: Problem[];
   reminderTime?: string;
   createdAt: string;
+  sortOrder: number;
 }
 
 export interface Section {
@@ -117,7 +118,8 @@ export function useAppStore() {
           problems: (t.problems as unknown as Problem[]) || [],
           reminderTime: t.reminder_time || undefined,
           createdAt: t.created_at,
-        })),
+          sortOrder: (t as any).sort_order ?? 0,
+        })).sort((a, b) => a.sortOrder - b.sortOrder),
         sections: dbSections.length > 0 ? dbSections : DEFAULT_SECTIONS,
         streaks: [],
         revivalVideos: (videosRes.data || []).map(v => ({
@@ -186,6 +188,7 @@ export function useAppStore() {
         problems: [],
         reminderTime: inserted.reminder_time || undefined,
         createdAt: inserted.created_at,
+        sortOrder: (inserted as any).sort_order ?? 0,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
     }
@@ -295,6 +298,15 @@ export function useAppStore() {
     setData(d => ({ ...d, visualizations: d.visualizations.filter(v => v.id !== id) }));
   }, []);
 
+  const reorderTasks = useCallback(async (reorderedTasks: Task[]) => {
+    const updated = reorderedTasks.map((t, i) => ({ ...t, sortOrder: i }));
+    setData(d => ({ ...d, tasks: updated }));
+    // Persist sort orders
+    for (const t of updated) {
+      supabase.from('tasks').update({ sort_order: t.sortOrder } as any).eq('id', t.id).then();
+    }
+  }, []);
+
   const today = new Date().toISOString().split('T')[0];
   const completedCount = data.tasks.filter(t => t.completed).length;
   const totalCount = data.tasks.length;
@@ -323,6 +335,7 @@ export function useAppStore() {
     removeRevivalStep,
     addVisualization,
     removeVisualization,
+    reorderTasks,
     today,
     completedCount,
     totalCount,

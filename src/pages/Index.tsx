@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, StickyNote, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
@@ -22,6 +22,44 @@ const Index = () => {
   const [showProfile, setShowProfile] = useState(false);
   const [showChat, setShowChat] = useState(false);
   const [showNotepad, setShowNotepad] = useState(false);
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+  const dragOverId = useRef<string | null>(null);
+
+  const handleDragStart = (id: string) => {
+    setDraggedId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault();
+    dragOverId.current = id;
+  };
+
+  const handleDragEnd = () => {
+    if (!draggedId || !dragOverId.current || draggedId === dragOverId.current) {
+      setDraggedId(null);
+      return;
+    }
+    const items = [...filteredTasks];
+    const fromIdx = items.findIndex(t => t.id === draggedId);
+    const toIdx = items.findIndex(t => t.id === dragOverId.current);
+    if (fromIdx === -1 || toIdx === -1) { setDraggedId(null); return; }
+    const [moved] = items.splice(fromIdx, 1);
+    items.splice(toIdx, 0, moved);
+
+    // If filtered, we need to rebuild the full list with new order
+    if (activeSection) {
+      const otherTasks = store.tasks.filter(t => t.sectionId !== activeSection);
+      store.reorderTasks([...items, ...otherTasks]);
+    } else {
+      store.reorderTasks(items);
+    }
+    setDraggedId(null);
+    dragOverId.current = null;
+  };
+
+  // Touch drag support
+  const touchStartY = useRef(0);
+  const touchStartId = useRef<string | null>(null);
 
   const filteredTasks = useMemo(() => {
     if (!activeSection) return store.tasks;
@@ -171,20 +209,30 @@ const Index = () => {
               </div>
             ) : (
               filteredTasks.map(task => (
-                <TaskCard
+                <div
                   key={task.id}
-                  task={task}
-                  section={store.sections.find(s => s.id === task.sectionId)}
-                  onToggle={store.toggleTask}
-                  onDelete={store.deleteTask}
-                  onAddBandaid={store.addBandaid}
-                  onRemoveBandaid={store.removeBandaid}
-                  onAddProblem={store.addProblem}
-                  onRemoveProblem={store.removeProblem}
-                  visualizations={store.visualizations}
-                  onAddVisualization={store.addVisualization}
-                  onRemoveVisualization={store.removeVisualization}
-                />
+                  draggable
+                  onDragStart={() => handleDragStart(task.id)}
+                  onDragOver={(e) => handleDragOver(e, task.id)}
+                  onDragEnd={handleDragEnd}
+                  className={`transition-opacity ${draggedId === task.id ? 'opacity-50' : ''}`}
+                >
+                  <TaskCard
+                    task={task}
+                    section={store.sections.find(s => s.id === task.sectionId)}
+                    onToggle={store.toggleTask}
+                    onDelete={store.deleteTask}
+                    onAddBandaid={store.addBandaid}
+                    onRemoveBandaid={store.removeBandaid}
+                    onAddProblem={store.addProblem}
+                    onRemoveProblem={store.removeProblem}
+                    visualizations={store.visualizations}
+                    onAddVisualization={store.addVisualization}
+                    onRemoveVisualization={store.removeVisualization}
+                    isDragging={draggedId === task.id}
+                    dragHandleProps={{}}
+                  />
+                </div>
               ))
             )}
           </div>
