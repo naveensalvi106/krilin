@@ -119,7 +119,11 @@ export function useAppStore() {
           reminderTime: t.reminder_time || undefined,
           createdAt: t.created_at,
           sortOrder: (t as any).sort_order ?? 0,
-        })).sort((a, b) => a.sortOrder - b.sortOrder),
+        })).sort((a, b) => {
+          // Completed tasks go to bottom, then sort by sortOrder
+          if (a.completed !== b.completed) return a.completed ? 1 : -1;
+          return a.sortOrder - b.sortOrder;
+        }),
         sections: dbSections.length > 0 ? dbSections : DEFAULT_SECTIONS,
         streaks: [],
         revivalVideos: (videosRes.data || []).map(v => ({
@@ -197,8 +201,17 @@ export function useAppStore() {
   const toggleTask = useCallback(async (id: string) => {
     const task = data.tasks.find(t => t.id === id);
     if (!task) return;
-    await supabase.from('tasks').update({ completed: !task.completed }).eq('id', id);
-    setData(d => ({ ...d, tasks: d.tasks.map(t => t.id === id ? { ...t, completed: !t.completed } : t) }));
+    const newCompleted = !task.completed;
+    await supabase.from('tasks').update({ completed: newCompleted }).eq('id', id);
+    setData(d => {
+      const updated = d.tasks.map(t => t.id === id ? { ...t, completed: newCompleted } : t);
+      // Re-sort: incomplete first by sortOrder, completed last by sortOrder
+      updated.sort((a, b) => {
+        if (a.completed !== b.completed) return a.completed ? 1 : -1;
+        return a.sortOrder - b.sortOrder;
+      });
+      return { ...d, tasks: updated };
+    });
   }, [data.tasks]);
 
   const deleteTask = useCallback(async (id: string) => {
@@ -300,8 +313,12 @@ export function useAppStore() {
 
   const reorderTasks = useCallback(async (reorderedTasks: Task[]) => {
     const updated = reorderedTasks.map((t, i) => ({ ...t, sortOrder: i }));
+    // Sort: incomplete first, completed last
+    updated.sort((a, b) => {
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+      return a.sortOrder - b.sortOrder;
+    });
     setData(d => ({ ...d, tasks: updated }));
-    // Persist sort orders
     for (const t of updated) {
       supabase.from('tasks').update({ sort_order: t.sortOrder } as any).eq('id', t.id).then();
     }
