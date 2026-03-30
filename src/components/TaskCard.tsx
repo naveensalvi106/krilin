@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight } from 'lucide-react';
+import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical } from 'lucide-react';
 import type { Task, Section } from '@/lib/store';
 import CongratulateModal from './CongratulateModal';
 import type { Visualization } from '@/lib/store';
@@ -17,9 +17,11 @@ interface TaskCardProps {
   visualizations: Visualization[];
   onAddVisualization: (text: string, image?: string) => void;
   onRemoveVisualization: (id: string) => void;
+  isDragging?: boolean;
+  dragHandleProps?: Record<string, any>;
 }
 
-const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization }: TaskCardProps) => {
+const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps }: TaskCardProps) => {
   const [showBandaids, setShowBandaids] = useState(false);
   const [showProblems, setShowProblems] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
