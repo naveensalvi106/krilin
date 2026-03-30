@@ -61,11 +61,11 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
         layout
         className={`relative rounded-2xl p-4 pl-5 space-y-3 overflow-hidden ${task.completed ? 'opacity-60' : ''} ${isDragging ? 'shadow-2xl scale-[1.02]' : ''}`}
         style={{
-          background: `linear-gradient(135deg, hsla(${sectionColor}, 0.08), hsla(${sectionColor}, 0.03))`,
-          border: `1px solid hsla(${sectionColor}, 0.25)`,
+          background: `linear-gradient(135deg, hsl(${sectionColor} / 0.15), hsl(${sectionColor} / 0.05))`,
+          border: `1px solid hsl(${sectionColor} / 0.3)`,
           boxShadow: isDragging
-            ? `0 0 25px hsla(${sectionColor}, 0.3)`
-            : `0 0 12px hsla(${sectionColor}, 0.08)`,
+            ? `0 0 25px hsl(${sectionColor} / 0.4)`
+            : `0 0 12px hsl(${sectionColor} / 0.1)`,
         }}
       >
         {/* Left accent bar */}
@@ -73,7 +73,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
           className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
           style={{
             background: `linear-gradient(180deg, hsl(${sectionColor}), hsl(${hue} 60% 35%))`,
-            boxShadow: `0 0 8px hsla(${sectionColor}, 0.4)`,
+            boxShadow: `0 0 8px hsl(${sectionColor} / 0.5)`,
           }}
         />
         <div className="flex items-center gap-3">
