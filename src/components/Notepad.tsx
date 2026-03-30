@@ -123,7 +123,7 @@ const Notepad = () => {
   };
 
   const modal = open ? createPortal(
-    <div className="fixed inset-0 z-[120] overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4" onClick={() => setOpen(false)}>
+    <div className="fixed inset-0 overflow-y-auto bg-black/60 backdrop-blur-sm p-3 sm:p-4" style={{ zIndex: 9999 }} onClick={() => setOpen(false)}>
       <div className="flex min-h-full items-start justify-center py-3 sm:items-center sm:py-4">
         <motion.div
           initial={{ scale: 0.9, opacity: 0 }}
@@ -230,7 +230,7 @@ const Notepad = () => {
   ) : null;
 
   const imageViewer = viewImage ? createPortal(
-    <div className="fixed inset-0 z-[130] bg-black/90 flex items-center justify-center" onClick={() => setViewImage(null)}>
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center" style={{ zIndex: 10000 }} onClick={() => setViewImage(null)}>
       <button onClick={() => setViewImage(null)} className="absolute top-4 right-4 text-white"><X className="w-6 h-6" /></button>
       <img src={viewImage} alt="Note" className="max-w-full max-h-full object-contain rounded-xl" />
     </div>,
