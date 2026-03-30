@@ -149,6 +149,21 @@ export function useAppStore() {
     };
 
     load();
+
+    // Realtime subscriptions for cross-device sync
+    const channel = supabase
+      .channel('app-realtime-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'sections', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'visualizations', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'revival_videos', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'revival_steps', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notepad_sections', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   useEffect(() => {
