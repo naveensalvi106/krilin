@@ -79,72 +79,67 @@ const TaskCard = ({ task, section, onToggle, onDelete, onAddBandaid, onRemoveBan
             boxShadow: `2px 0 8px hsl(${sectionColor} / 0.4)`,
           }}
         />
-        <div className="flex items-center gap-3">
-          {/* Drag Handle */}
-          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors">
+        {/* Top row: drag + check + title */}
+        <div className="flex items-center gap-2">
+          <div {...dragHandleProps} className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors shrink-0">
             <GripVertical className="w-4 h-4" />
           </div>
           <button onClick={handleToggle} className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${task.completed ? 'bg-primary border-primary' : 'border-muted-foreground hover:border-primary'}`}>
             {task.completed && <Check className="w-3.5 h-3.5 text-primary-foreground" />}
           </button>
-
-          <span className={`flex-1 font-medium ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+          <span className={`flex-1 font-medium text-sm min-w-0 truncate ${task.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
             {task.title}
           </span>
+        </div>
 
-          <div className="flex items-center gap-1.5 shrink-0">
-            {section && (
-              <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: `hsla(${section.color}, 0.2)`, color: `hsl(${section.color})` }}>
-                {section.name}
+        {/* Bottom row: section tag + reminder + action buttons */}
+        <div className="flex items-center gap-1.5 flex-wrap pl-[3.25rem]">
+          {section && (
+            <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: `hsl(${sectionColor} / 0.2)`, color: `hsl(${sectionColor})` }}>
+              {section.name}
+            </span>
+          )}
+
+          {task.reminderTime && (() => {
+            const [h, m] = task.reminderTime.split(':').map(Number);
+            const d = new Date();
+            d.setUTCHours(h, m, 0, 0);
+            const hour12 = d.getHours() % 12 || 12;
+            const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
+            const displayTime = `${hour12}:${String(d.getMinutes()).padStart(2, '0')} ${ampm}`;
+            return (
+              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                <Clock className="w-3 h-3" />
+                {displayTime}
               </span>
-            )}
+            );
+          })()}
 
-            {task.reminderTime && (() => {
-              // Convert UTC reminder time to local for display
-              const [h, m] = task.reminderTime.split(':').map(Number);
-              const d = new Date();
-              d.setUTCHours(h, m, 0, 0);
-              const localTime = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
-              const hour12 = d.getHours() % 12 || 12;
-              const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
-              const displayTime = `${hour12}:${String(d.getMinutes()).padStart(2, '0')} ${ampm}`;
-              return (
-                <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <Clock className="w-3 h-3" />
-                  {displayTime}
-                </span>
-              );
-            })()}
-
-            {/* Bandaid */}
+          <div className="flex items-center gap-1 ml-auto">
             <button onClick={() => { setShowBandaids(!showBandaids); setShowProblems(false); }}
-              className="w-8 h-8 sm:w-9 sm:h-9 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 solid-circle shrink-0 transition-all duration-300 hover:scale-110"
               title="Bandaids"
             >
-              <Bandage className="w-4 h-4" />
+              <Bandage className="w-3.5 h-3.5" />
             </button>
-
-            {/* Problems */}
             <button onClick={() => { setShowProblems(!showProblems); setShowBandaids(false); }}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               title="Problems"
               style={{
                 background: 'linear-gradient(135deg, hsl(45, 90%, 50%), hsl(30, 80%, 40%))',
-                boxShadow: '0 0 12px hsla(45, 90%, 50%, 0.3), inset 0 1px 0 hsla(45, 100%, 70%, 0.2)',
+                boxShadow: '0 0 8px hsla(45, 90%, 50%, 0.3)',
               }}
             >
-              <AlertTriangle className="w-4 h-4" />
+              <AlertTriangle className="w-3.5 h-3.5" />
             </button>
-
-            {/* Delete */}
             <button onClick={() => onDelete(task.id)}
-              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
+              className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
               style={{
                 background: 'linear-gradient(135deg, hsl(0, 70%, 50%), hsl(0, 60%, 35%))',
-                boxShadow: '0 0 12px hsla(0, 80%, 50%, 0.3), inset 0 1px 0 hsla(0, 100%, 70%, 0.2)',
+                boxShadow: '0 0 8px hsla(0, 80%, 50%, 0.3)',
               }}
             >
-              <X className="w-4 h-4" />
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
