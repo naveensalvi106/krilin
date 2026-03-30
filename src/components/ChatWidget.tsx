@@ -1,67 +1,32 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageCircle, X, Send, AlertTriangle } from 'lucide-react';
+import { X, Send, AlertTriangle, Bot, Sparkles, CalendarDays } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import type { Section, Task } from '@/lib/store';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
 
-const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
-
-async function streamChat({
-  messages,
-  onDelta,
-  onDone,
-}: {
-  messages: Msg[];
-  onDelta: (t: string) => void;
-  onDone: () => void;
-}) {
-  const resp = await fetch(CHAT_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-    },
-    body: JSON.stringify({ messages }),
-  });
-
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({ error: 'Network error' }));
-    throw new Error(err.error || `Error ${resp.status}`);
-  }
-  if (!resp.body) throw new Error('No stream');
-
-  const reader = resp.body.getReader();
-  const decoder = new TextDecoder();
-  let buf = '';
-  let done = false;
-
-  while (!done) {
-    const { done: rd, value } = await reader.read();
-    if (rd) break;
-    buf += decoder.decode(value, { stream: true });
-
-    let idx: number;
-    while ((idx = buf.indexOf('\n')) !== -1) {
-      let line = buf.slice(0, idx);
-      buf = buf.slice(idx + 1);
-      if (line.endsWith('\r')) line = line.slice(0, -1);
-      if (!line.startsWith('data: ')) continue;
-      const json = line.slice(6).trim();
-      if (json === '[DONE]') { done = true; break; }
-      try {
-        const p = JSON.parse(json);
-        const c = p.choices?.[0]?.delta?.content;
-        if (c) onDelta(c);
-      } catch { buf = line + '\n' + buf; break; }
-    }
-  }
-  onDone();
+interface ToolCall {
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
 
-const ChatWidget = () => {
-  const [open, setOpen] = useState(false);
+interface ChatWidgetProps {
+  open: boolean;
+  onClose: () => void;
+  sections: Section[];
+  tasks: Task[];
+  onAddTask: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string }) => Promise<void>;
+  onToggleTask: (id: string) => Promise<void>;
+  onDeleteTask: (id: string) => Promise<void>;
+}
+
+const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
+
+const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, onDeleteTask }: ChatWidgetProps) => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,6 +36,51 @@ const ChatWidget = () => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
 
+  const handleToolCalls = async (toolCalls: ToolCall[]) => {
+    for (const tc of toolCalls) {
+      try {
+        const args = JSON.parse(tc.function.arguments);
+        if (tc.function.name === 'add_tasks' && args.tasks) {
+          for (const t of args.tasks) {
+            await onAddTask({
+              title: t.title,
+              sectionId: t.section_id,
+              bandaids: [],
+              reminderTime: t.reminder_time || undefined,
+            });
+          }
+          toast.success(`Added ${args.tasks.length} task(s)!`);
+        } else if (tc.function.name === 'complete_tasks' && args.task_titles) {
+          let completed = 0;
+          for (const title of args.task_titles) {
+            const match = tasks.find(t => 
+              !t.completed && t.title.toLowerCase().includes(title.toLowerCase())
+            );
+            if (match) {
+              await onToggleTask(match.id);
+              completed++;
+            }
+          }
+          if (completed > 0) toast.success(`Completed ${completed} task(s)!`);
+        } else if (tc.function.name === 'delete_tasks' && args.task_titles) {
+          let deleted = 0;
+          for (const title of args.task_titles) {
+            const match = tasks.find(t => 
+              t.title.toLowerCase().includes(title.toLowerCase())
+            );
+            if (match) {
+              await onDeleteTask(match.id);
+              deleted++;
+            }
+          }
+          if (deleted > 0) toast.success(`Deleted ${deleted} task(s)!`);
+        }
+      } catch (err) {
+        console.error('Tool call error:', err);
+      }
+    }
+  };
+
   const send = async () => {
     const text = input.trim();
     if (!text || loading) return;
@@ -79,53 +89,94 @@ const ChatWidget = () => {
     setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
-    let soFar = '';
-    const upsert = (chunk: string) => {
-      soFar += chunk;
-      setMessages(prev => {
-        const last = prev[prev.length - 1];
-        if (last?.role === 'assistant') {
-          return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: soFar } : m);
-        }
-        return [...prev, { role: 'assistant', content: soFar }];
-      });
-    };
-
     try {
-      await streamChat({
-        messages: [...messages, userMsg],
-        onDelta: upsert,
-        onDone: () => setLoading(false),
+      const resp = await fetch(CHAT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          messages: [...messages, userMsg],
+          sections: sections.map(s => ({ id: s.id, name: s.name })),
+        }),
       });
+
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({ error: 'Network error' }));
+        throw new Error(err.error || `Error ${resp.status}`);
+      }
+
+      const result = await resp.json();
+      const choice = result.choices?.[0];
+
+      if (choice?.message?.tool_calls?.length > 0) {
+        await handleToolCalls(choice.message.tool_calls);
+        // If there's also text content, show it
+        const textContent = choice.message.content;
+        if (textContent) {
+          setMessages(prev => [...prev, { role: 'assistant', content: textContent }]);
+        } else {
+          // Generate a follow-up without tool calls
+          const followUp = await fetch(CHAT_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({
+              messages: [
+                ...messages,
+                userMsg,
+                { role: 'assistant', content: 'I\'ve completed the requested actions.' },
+                { role: 'user', content: 'Briefly confirm what you just did.' },
+              ],
+              sections: sections.map(s => ({ id: s.id, name: s.name })),
+            }),
+          });
+          if (followUp.ok) {
+            const fResult = await followUp.json();
+            const fContent = fResult.choices?.[0]?.message?.content;
+            if (fContent) {
+              setMessages(prev => [...prev, { role: 'assistant', content: fContent }]);
+            }
+          }
+        }
+      } else if (choice?.message?.content) {
+        setMessages(prev => [...prev, { role: 'assistant', content: choice.message.content }]);
+      }
     } catch (e: any) {
       toast.error(e.message || 'Chat error');
+    } finally {
       setLoading(false);
     }
   };
 
   const quickPrompts = [
+    { icon: <CalendarDays className="w-3 h-3" />, label: "Plan my day", msg: "Plan my day with productive tasks across all my sections." },
+    { icon: <Sparkles className="w-3 h-3" />, label: "Motivate me", msg: "I need motivation to complete my tasks today." },
     { icon: <AlertTriangle className="w-3 h-3" />, label: "I'm struggling", msg: "I'm really struggling right now and need help getting back on track." },
-    { icon: <Send className="w-3 h-3" />, label: "Motivate me", msg: "I need motivation to complete my tasks today." },
   ];
 
   return (
-    <>
-      <AnimatePresence>
-        {open && (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={onClose}>
           <motion.div
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-20 right-6 z-50 w-80 sm:w-96 rounded-2xl border border-border overflow-hidden shadow-2xl flex flex-col"
-            style={{ background: 'hsl(15, 5%, 8%)', maxHeight: '70vh' }}
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            className="w-full max-w-lg mx-4 rounded-2xl border border-border overflow-hidden shadow-2xl flex flex-col"
+            style={{ background: 'hsl(15, 5%, 8%)', maxHeight: '80vh' }}
+            onClick={e => e.stopPropagation()}
           >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-border" style={{ background: 'hsl(15, 5%, 6%)' }}>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-                <span className="font-display text-sm text-gradient-fire">EasyFlow Coach</span>
+                <Bot className="w-4 h-4 text-primary" />
+                <span className="font-display text-sm text-gradient-fire">EasyFlow AI</span>
               </div>
-              <button onClick={() => setOpen(false)} className="text-muted-foreground hover:text-foreground">
+              <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
                 <X className="w-4 h-4" />
               </button>
             </div>
@@ -134,7 +185,7 @@ const ChatWidget = () => {
             <div className="flex-1 overflow-y-auto p-3 space-y-3 min-h-[200px]">
               {messages.length === 0 && (
                 <div className="text-center py-6 space-y-3">
-                  <p className="text-sm text-muted-foreground">Hey! I'm your EasyFlow coach. Need help or motivation?</p>
+                  <p className="text-sm text-muted-foreground">I can add tasks, plan your day, motivate you, and more!</p>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {quickPrompts.map(q => (
                       <button
@@ -167,7 +218,7 @@ const ChatWidget = () => {
                   </div>
                 </div>
               ))}
-              {loading && messages[messages.length - 1]?.role !== 'assistant' && (
+              {loading && (
                 <div className="flex justify-start">
                   <div className="rounded-2xl rounded-bl-md px-3 py-2 text-sm" style={{ background: 'hsl(15, 10%, 14%)' }}>
                     <span className="animate-pulse">Thinking...</span>
@@ -184,7 +235,7 @@ const ChatWidget = () => {
                   value={input}
                   onChange={e => setInput(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && !e.shiftKey && send()}
-                  placeholder="What's on your mind?"
+                  placeholder="Ask me to add tasks, plan your day..."
                   className="flex-1 bg-muted border border-border rounded-xl px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary"
                 />
                 <button
@@ -197,19 +248,9 @@ const ChatWidget = () => {
               </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* FAB */}
-      <motion.button
-        onClick={() => setOpen(!open)}
-        className="fixed bottom-6 right-6 z-50 w-12 h-12 rounded-full shadow-lg flex items-center justify-center"
-        style={{ background: 'linear-gradient(135deg, hsl(25, 95%, 53%), hsl(15, 80%, 45%))' }}
-        whileTap={{ scale: 0.9 }}
-      >
-        {open ? <X className="w-5 h-5 text-white" /> : <MessageCircle className="w-5 h-5 text-white" />}
-      </motion.button>
-    </>
+        </div>
+      )}
+    </AnimatePresence>
   );
 };
 
