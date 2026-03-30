@@ -1,8 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, AlertTriangle, Bot, Sparkles, CalendarDays } from 'lucide-react';
+import { X, Send, AlertTriangle, Bot, Sparkles, CalendarDays, Trash2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import type { Section, Task } from '@/lib/store';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -27,14 +29,46 @@ interface ChatWidgetProps {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, onDeleteTask }: ChatWidgetProps) => {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  // Load chat history on first open
+  useEffect(() => {
+    if (!open || historyLoaded || !user) return;
+    const load = async () => {
+      const { data } = await supabase
+        .from('chat_messages')
+        .select('role, content')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+        .limit(100);
+      if (data && data.length > 0) {
+        setMessages(data.map(d => ({ role: d.role as 'user' | 'assistant', content: d.content })));
+      }
+      setHistoryLoaded(true);
+    };
+    load();
+  }, [open, historyLoaded, user]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, open]);
+
+  const saveMessage = useCallback(async (role: string, content: string) => {
+    if (!user) return;
+    await supabase.from('chat_messages').insert({ user_id: user.id, role, content } as any);
+  }, [user]);
+
+  const clearHistory = useCallback(async () => {
+    if (!user) return;
+    await supabase.from('chat_messages').delete().eq('user_id', user.id);
+    setMessages([]);
+    toast.success('Chat history cleared');
+  }, [user]);
 
   const handleToolCalls = async (toolCalls: ToolCall[]) => {
     for (const tc of toolCalls) {
@@ -94,6 +128,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
     setInput('');
     const userMsg: Msg = { role: 'user', content: text };
     setMessages(prev => [...prev, userMsg]);
+    saveMessage('user', text);
     setLoading(true);
 
     try {
@@ -124,6 +159,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
         const textContent = choice.message.content;
         if (textContent) {
           setMessages(prev => [...prev, { role: 'assistant', content: textContent }]);
+          saveMessage('assistant', textContent);
         } else {
           // Generate a follow-up without tool calls
           const followUp = await fetch(CHAT_URL, {
@@ -147,11 +183,13 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             const fContent = fResult.choices?.[0]?.message?.content;
             if (fContent) {
               setMessages(prev => [...prev, { role: 'assistant', content: fContent }]);
+              saveMessage('assistant', fContent);
             }
           }
         }
       } else if (choice?.message?.content) {
         setMessages(prev => [...prev, { role: 'assistant', content: choice.message.content }]);
+        saveMessage('assistant', choice.message.content);
       }
     } catch (e: any) {
       toast.error(e.message || 'Chat error');
@@ -184,9 +222,16 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
                 <Bot className="w-4 h-4 text-primary" />
                 <span className="font-display text-sm text-gradient-fire">EasyFlow AI</span>
               </div>
-              <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-1.5">
+                {messages.length > 0 && (
+                  <button onClick={clearHistory} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(15, 10%, 14%)' }} title="Clear chat">
+                    <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                )}
+                <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
 
             {/* Messages */}
