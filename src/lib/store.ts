@@ -89,6 +89,7 @@ interface AppData {
   revivalVideos: RevivalVideo[];
   revivalSteps: RevivalStep[];
   visualizations: Visualization[];
+  presets: TaskPreset[];
 }
 
 const EMPTY_DATA: AppData = {
