@@ -215,6 +215,39 @@ export type Database = {
         }
         Relationships: []
       }
+      task_presets: {
+        Row: {
+          bandaids: string[] | null
+          created_at: string
+          icon_urls: string[] | null
+          id: string
+          reminder_time: string | null
+          section_id: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          bandaids?: string[] | null
+          created_at?: string
+          icon_urls?: string[] | null
+          id?: string
+          reminder_time?: string | null
+          section_id: string
+          title: string
+          user_id: string
+        }
+        Update: {
+          bandaids?: string[] | null
+          created_at?: string
+          icon_urls?: string[] | null
+          id?: string
+          reminder_time?: string | null
+          section_id?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       tasks: {
         Row: {
           bandaids: string[] | null
