@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical, Pencil, Image } from 'lucide-react';
+import { Check, X, Clock, Plus, Bandage, AlertTriangle, ChevronDown, ChevronRight, GripVertical, Pencil, Image, Bookmark } from 'lucide-react';
 import type { Task, Section, Visualization } from '@/lib/store';
 import CongratulateModal from './CongratulateModal';
 import ConfirmDialog from './ConfirmDialog';
