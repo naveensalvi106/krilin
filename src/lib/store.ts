@@ -21,6 +21,7 @@ export interface Task {
   createdAt: string;
   sortOrder: number;
   customSectionId?: string;
+  taskDate: string;
 }
 
 export interface Section {
