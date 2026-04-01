@@ -199,11 +199,12 @@ export function useAppStore() {
     const incompleteTasks = data.tasks.filter(t => !t.completed);
     const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
     const newSortOrder = maxSortOrder + 1;
+    const taskDate = task.taskDate || new Date().toISOString().split('T')[0];
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
       reminder_time: utcReminderTime, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
       problems: [] as unknown as Json, custom_section_id: task.customSectionId || null,
-      sort_order: newSortOrder,
+      sort_order: newSortOrder, task_date: taskDate,
     } as any).select().single();
     if (inserted && !error) {
       const raw = inserted as any;
