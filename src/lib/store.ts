@@ -100,6 +100,7 @@ const EMPTY_DATA: AppData = {
   revivalVideos: [],
   revivalSteps: [],
   visualizations: [],
+  presets: [],
 };
 
 export function useAppStore() {
