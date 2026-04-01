@@ -186,7 +186,7 @@ export function useAppStore() {
   // --- Main tasks (exclude custom section tasks) ---
   const mainTasks = data.tasks.filter(t => !t.customSectionId);
 
-  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'>) => {
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'> & { taskDate?: string }) => {
     if (!user) return;
     let utcReminderTime: string | null = null;
     if (task.reminderTime) {
