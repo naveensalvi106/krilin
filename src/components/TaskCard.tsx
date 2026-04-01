@@ -297,6 +297,31 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                       </AnimatePresence>
                     </div>
                   )}
+
+                  {/* Save as Preset */}
+                  {onSavePreset && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSavePreset({
+                          title: task.title,
+                          sectionId: task.sectionId,
+                          reminderTime: task.reminderTime,
+                          iconUrls: task.iconUrls || [],
+                          bandaids: task.bandaids || [],
+                        });
+                        playClick();
+                      }}
+                      className="flex items-center gap-2 w-full px-2 py-2 rounded-lg transition-all hover:scale-[1.01]"
+                      style={{ background: 'hsla(45, 100%, 50%, 0.12)', border: '1px solid hsla(45, 100%, 50%, 0.25)' }}
+                    >
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        style={{ background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 90%, 45%))' }}>
+                        <Bookmark className="w-3.5 h-3.5 text-white" />
+                      </div>
+                      <span className="text-xs text-white/80 font-medium">Save as Preset</span>
+                    </button>
+                  )}
                 </div>
               </motion.div>
             )}
