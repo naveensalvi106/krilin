@@ -136,6 +136,7 @@ export function useAppStore() {
             bandaids: t.bandaids || [], problems: (t.problems as unknown as Problem[]) || [],
             reminderTime: t.reminder_time || undefined, iconUrls, createdAt: t.created_at,
             sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
+            taskDate: raw.task_date || new Date().toISOString().split('T')[0],
           };
         }).sort((a, b) => {
           if (a.completed !== b.completed) return a.completed ? 1 : -1;
