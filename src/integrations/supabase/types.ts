@@ -228,6 +228,7 @@ export type Database = {
           reminder_time: string | null
           section_id: string
           sort_order: number
+          task_date: string
           title: string
           user_id: string
         }
@@ -243,6 +244,7 @@ export type Database = {
           reminder_time?: string | null
           section_id: string
           sort_order?: number
+          task_date?: string
           title: string
           user_id: string
         }
@@ -258,6 +260,7 @@ export type Database = {
           reminder_time?: string | null
           section_id?: string
           sort_order?: number
+          task_date?: string
           title?: string
           user_id?: string
         }

@@ -1,0 +1,1 @@
+ALTER TABLE public.tasks ADD COLUMN task_date TEXT NOT NULL DEFAULT to_char(now() AT TIME ZONE 'UTC', 'YYYY-MM-DD');
