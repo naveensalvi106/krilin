@@ -326,6 +326,7 @@ const Index = () => {
                     isDragging={draggedId === task.id}
                     dragHandleProps={{}}
                     stickers={stickers}
+                    onSavePreset={store.savePreset}
                   />
                 </div>
               ))
