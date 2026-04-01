@@ -64,6 +64,15 @@ export interface Visualization {
   taskId?: string;
 }
 
+export interface TaskPreset {
+  id: string;
+  title: string;
+  sectionId: string;
+  reminderTime?: string;
+  iconUrls: string[];
+  bandaids: string[];
+}
+
 export const DEFAULT_SECTIONS: Section[] = [
   { id: 'health', name: 'Health', icon: 'Heart', color: '0 85% 55%' },
   { id: 'work', name: 'Work', icon: 'Laptop', color: '30 90% 50%' },
