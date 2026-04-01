@@ -231,7 +231,7 @@ const Index = () => {
           );
         })()}
 
-        <AddTaskForm sections={store.sections} stickers={stickers} onAdd={handleAddTask} />
+        <AddTaskForm sections={store.sections} stickers={stickers} presets={store.presets} onAdd={handleAddTask} onDeletePreset={store.deletePreset} />
 
         <div className="space-y-3">
           <div className="flex items-center gap-0 overflow-x-auto pb-1 scrollbar-none">
@@ -326,6 +326,7 @@ const Index = () => {
                     isDragging={draggedId === task.id}
                     dragHandleProps={{}}
                     stickers={stickers}
+                    onSavePreset={store.savePreset}
                   />
                 </div>
               ))

@@ -64,6 +64,15 @@ export interface Visualization {
   taskId?: string;
 }
 
+export interface TaskPreset {
+  id: string;
+  title: string;
+  sectionId: string;
+  reminderTime?: string;
+  iconUrls: string[];
+  bandaids: string[];
+}
+
 export const DEFAULT_SECTIONS: Section[] = [
   { id: 'health', name: 'Health', icon: 'Heart', color: '0 85% 55%' },
   { id: 'work', name: 'Work', icon: 'Laptop', color: '30 90% 50%' },
@@ -80,6 +89,7 @@ interface AppData {
   revivalVideos: RevivalVideo[];
   revivalSteps: RevivalStep[];
   visualizations: Visualization[];
+  presets: TaskPreset[];
 }
 
 const EMPTY_DATA: AppData = {
@@ -90,6 +100,7 @@ const EMPTY_DATA: AppData = {
   revivalVideos: [],
   revivalSteps: [],
   visualizations: [],
+  presets: [],
 };
 
 export function useAppStore() {
@@ -105,13 +116,14 @@ export function useAppStore() {
     }
 
     const load = async () => {
-      const [tasksRes, sectionsRes, customSectionsRes, visRes, videosRes, stepsRes] = await Promise.all([
+      const [tasksRes, sectionsRes, customSectionsRes, visRes, videosRes, stepsRes, presetsRes] = await Promise.all([
         supabase.from('tasks').select('*').eq('user_id', user.id),
         supabase.from('sections').select('*').eq('user_id', user.id),
         supabase.from('custom_sections' as any).select('*').eq('user_id', user.id),
         supabase.from('visualizations').select('*').eq('user_id', user.id),
         supabase.from('revival_videos').select('*').eq('user_id', user.id),
         supabase.from('revival_steps').select('*').eq('user_id', user.id).order('step'),
+        supabase.from('task_presets' as any).select('*').eq('user_id', user.id),
       ]);
 
       const dbSections = (sectionsRes.data || []).map(s => ({
@@ -148,6 +160,10 @@ export function useAppStore() {
         revivalVideos: (videosRes.data || []).map(v => ({ id: v.id, title: v.title, url: v.url, channel: v.channel })),
         revivalSteps: (stepsRes.data || []).map(s => ({ id: s.id, step: s.step, text: s.text })),
         visualizations: (visRes.data || []).map(v => ({ id: v.id, text: v.text, image: v.image || undefined, taskId: (v as any).task_id || undefined })),
+        presets: ((presetsRes.data as any[]) || []).map((p: any) => ({
+          id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined,
+          iconUrls: p.icon_urls || [], bandaids: p.bandaids || [],
+        })),
       });
       setLoaded(true);
     };
@@ -401,6 +417,25 @@ export function useAppStore() {
     }
   }, []);
 
+  // --- Presets ---
+  const savePreset = useCallback(async (preset: Omit<TaskPreset, 'id'>) => {
+    if (!user) return;
+    const { data: inserted } = await supabase.from('task_presets' as any).insert({
+      user_id: user.id, title: preset.title, section_id: preset.sectionId,
+      reminder_time: preset.reminderTime || null, icon_urls: preset.iconUrls || [],
+      bandaids: preset.bandaids || [],
+    } as any).select().single();
+    if (inserted) {
+      const p = inserted as any;
+      setData(d => ({ ...d, presets: [...d.presets, { id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined, iconUrls: p.icon_urls || [], bandaids: p.bandaids || [] }] }));
+    }
+  }, [user]);
+
+  const deletePreset = useCallback(async (id: string) => {
+    await supabase.from('task_presets' as any).delete().eq('id', id);
+    setData(d => ({ ...d, presets: d.presets.filter(p => p.id !== id) }));
+  }, []);
+
   // Streak only counts main tasks (not custom section tasks)
   const today = new Date().toISOString().split('T')[0];
   const completedCount = mainTasks.filter(t => t.completed).length;
@@ -418,11 +453,13 @@ export function useAppStore() {
     revivalVideos: data.revivalVideos,
     revivalSteps: data.revivalSteps,
     visualizations: data.visualizations,
+    presets: data.presets,
     addTask, toggleTask, deleteTask, editTask, addSection,
     addCustomSection, editCustomSection, deleteCustomSection,
     addBandaid, removeBandaid, addProblem, removeProblem,
     addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep,
     addVisualization, removeVisualization, reorderTasks,
+    savePreset, deletePreset,
     today, completedCount, totalCount, streakPercent, isGolden, currentStreak, loaded,
   };
 }
