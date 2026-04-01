@@ -213,6 +213,7 @@ export function useAppStore() {
         bandaids: inserted.bandaids || [], problems: [], reminderTime: inserted.reminder_time || undefined,
         iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []), createdAt: inserted.created_at,
         sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
+        taskDate: raw.task_date || taskDate,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
     }
