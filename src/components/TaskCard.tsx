@@ -25,7 +25,7 @@ interface TaskCardProps {
   onSavePreset?: (preset: { title: string; sectionId: string; reminderTime?: string; iconUrls: string[]; bandaids: string[] }) => void;
 }
 
-const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps, stickers = [] }: TaskCardProps) => {
+const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps, stickers = [], onSavePreset }: TaskCardProps) => {
   const [showBandaids, setShowBandaids] = useState(false);
   const [showProblems, setShowProblems] = useState(false);
   const [showCongrats, setShowCongrats] = useState(false);
