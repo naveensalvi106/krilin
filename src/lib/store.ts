@@ -417,6 +417,25 @@ export function useAppStore() {
     }
   }, []);
 
+  // --- Presets ---
+  const savePreset = useCallback(async (preset: Omit<TaskPreset, 'id'>) => {
+    if (!user) return;
+    const { data: inserted } = await supabase.from('task_presets' as any).insert({
+      user_id: user.id, title: preset.title, section_id: preset.sectionId,
+      reminder_time: preset.reminderTime || null, icon_urls: preset.iconUrls || [],
+      bandaids: preset.bandaids || [],
+    } as any).select().single();
+    if (inserted) {
+      const p = inserted as any;
+      setData(d => ({ ...d, presets: [...d.presets, { id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined, iconUrls: p.icon_urls || [], bandaids: p.bandaids || [] }] }));
+    }
+  }, [user]);
+
+  const deletePreset = useCallback(async (id: string) => {
+    await supabase.from('task_presets' as any).delete().eq('id', id);
+    setData(d => ({ ...d, presets: d.presets.filter(p => p.id !== id) }));
+  }, []);
+
   // Streak only counts main tasks (not custom section tasks)
   const today = new Date().toISOString().split('T')[0];
   const completedCount = mainTasks.filter(t => t.completed).length;
@@ -434,11 +453,13 @@ export function useAppStore() {
     revivalVideos: data.revivalVideos,
     revivalSteps: data.revivalSteps,
     visualizations: data.visualizations,
+    presets: data.presets,
     addTask, toggleTask, deleteTask, editTask, addSection,
     addCustomSection, editCustomSection, deleteCustomSection,
     addBandaid, removeBandaid, addProblem, removeProblem,
     addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep,
     addVisualization, removeVisualization, reorderTasks,
+    savePreset, deletePreset,
     today, completedCount, totalCount, streakPercent, isGolden, currentStreak, loaded,
   };
 }
