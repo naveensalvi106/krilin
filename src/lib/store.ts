@@ -160,6 +160,10 @@ export function useAppStore() {
         revivalVideos: (videosRes.data || []).map(v => ({ id: v.id, title: v.title, url: v.url, channel: v.channel })),
         revivalSteps: (stepsRes.data || []).map(s => ({ id: s.id, step: s.step, text: s.text })),
         visualizations: (visRes.data || []).map(v => ({ id: v.id, text: v.text, image: v.image || undefined, taskId: (v as any).task_id || undefined })),
+        presets: ((presetsRes.data as any[]) || []).map((p: any) => ({
+          id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined,
+          iconUrls: p.icon_urls || [], bandaids: p.bandaids || [],
+        })),
       });
       setLoaded(true);
     };
