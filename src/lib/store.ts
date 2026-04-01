@@ -116,13 +116,14 @@ export function useAppStore() {
     }
 
     const load = async () => {
-      const [tasksRes, sectionsRes, customSectionsRes, visRes, videosRes, stepsRes] = await Promise.all([
+      const [tasksRes, sectionsRes, customSectionsRes, visRes, videosRes, stepsRes, presetsRes] = await Promise.all([
         supabase.from('tasks').select('*').eq('user_id', user.id),
         supabase.from('sections').select('*').eq('user_id', user.id),
         supabase.from('custom_sections' as any).select('*').eq('user_id', user.id),
         supabase.from('visualizations').select('*').eq('user_id', user.id),
         supabase.from('revival_videos').select('*').eq('user_id', user.id),
         supabase.from('revival_steps').select('*').eq('user_id', user.id).order('step'),
+        supabase.from('task_presets' as any).select('*').eq('user_id', user.id),
       ]);
 
       const dbSections = (sectionsRes.data || []).map(s => ({
