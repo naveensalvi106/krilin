@@ -1,17 +1,21 @@
 import { useState } from 'react';
-import { Plus, AlarmClock, Image } from 'lucide-react';
+import { Plus, AlarmClock, Image, Bookmark, X } from 'lucide-react';
 import type { Section } from '@/lib/store';
+import type { TaskPreset } from '@/lib/store';
 import type { Sticker } from './StickerManager';
 import TimePickerModal from './TimePickerModal';
-import { playAddTask, playOpen, playClose } from '@/lib/sounds';
+import { playAddTask, playOpen, playClose, playClick, playDelete } from '@/lib/sounds';
+import ConfirmDialog from './ConfirmDialog';
 
 interface AddTaskFormProps {
   sections: Section[];
   stickers: Sticker[];
+  presets: TaskPreset[];
   onAdd: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => void;
+  onDeletePreset: (id: string) => void;
 }
 
-const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
+const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: AddTaskFormProps) => {
   const [title, setTitle] = useState('');
   const [sectionId, setSectionId] = useState(sections[0]?.id || '');
   const [reminderTime, setReminderTime] = useState('');
@@ -19,6 +23,8 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
   const [expanded, setExpanded] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [showIconPicker, setShowIconPicker] = useState(false);
+  const [showPresets, setShowPresets] = useState(false);
+  const [confirmDeletePreset, setConfirmDeletePreset] = useState<string | null>(null);
 
   const formatDisplay = (time: string) => {
     if (!time) return '';
@@ -37,6 +43,15 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
     setReminderTime('');
     setSelectedIcons([]);
     setExpanded(false);
+  };
+
+  const handleLoadPreset = (preset: TaskPreset) => {
+    setTitle(preset.title);
+    setSectionId(preset.sectionId);
+    setReminderTime(preset.reminderTime || '');
+    setSelectedIcons(preset.iconUrls || []);
+    setShowPresets(false);
+    playClick();
   };
 
   const toggleIcon = (url: string) => {
@@ -127,7 +142,61 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
             <Image className="w-4 h-4 icon-glow" />
             <span className="text-sm">{selectedIcons.length > 0 ? `${selectedIcons.length} Icon${selectedIcons.length > 1 ? 's' : ''} ✓` : 'Add Icons'}</span>
           </button>
+
+          {presets.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { setShowPresets(!showPresets); showPresets ? playClose() : playOpen(); }}
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02]"
+              style={{
+                background: 'linear-gradient(135deg, hsl(45, 60%, 14%), hsl(30, 40%, 10%))',
+                border: '1px solid hsl(45, 50%, 25%)',
+                boxShadow: '0 0 12px hsl(45, 90%, 52% / 0.12)',
+              }}
+            >
+              <Bookmark className="w-4 h-4 icon-glow" />
+              <span className="text-sm">Presets ({presets.length})</span>
+            </button>
+          )}
         </div>
+
+        {/* Presets picker */}
+        {showPresets && presets.length > 0 && (
+          <div className="rounded-xl p-3 border border-border space-y-2" style={{ background: 'hsl(15, 10%, 8%)' }}>
+            <p className="text-xs text-muted-foreground font-medium">📋 Load a preset</p>
+            <div className="space-y-1.5">
+              {presets.map(p => {
+                const presetSection = sections.find(s => s.id === p.sectionId);
+                return (
+                  <div key={p.id} className="flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer hover:scale-[1.01] transition-all"
+                    style={{ background: 'hsl(15, 10%, 12%)', border: '1px solid hsl(15, 20%, 18%)' }}
+                  >
+                    <div className="flex-1 flex items-center gap-2 min-w-0" onClick={() => handleLoadPreset(p)}>
+                      {(p.iconUrls || []).slice(0, 3).map((url, i) => (
+                        <img key={i} src={url} alt="" className="w-4 h-4 object-contain shrink-0" />
+                      ))}
+                      <span className="text-sm text-foreground truncate">{p.title}</span>
+                      {presetSection && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full shrink-0"
+                          style={{ background: `hsl(${presetSection.color} / 0.2)`, color: `hsl(${presetSection.color})` }}>
+                          {presetSection.name}
+                        </span>
+                      )}
+                      {p.reminderTime && (
+                        <span className="text-[10px] text-muted-foreground shrink-0">⏰ {formatDisplay(p.reminderTime)}</span>
+                      )}
+                    </div>
+                    <button type="button" onClick={() => setConfirmDeletePreset(p.id)}
+                      className="w-5 h-5 rounded-full flex items-center justify-center shrink-0 hover:scale-110 transition-transform"
+                      style={{ background: 'hsl(0, 60%, 40%)' }}>
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {showIconPicker && (
           <div className="rounded-xl p-3 border border-border" style={{ background: 'hsl(15, 10%, 8%)' }}>
@@ -171,6 +240,16 @@ const AddTaskForm = ({ sections, stickers, onAdd }: AddTaskFormProps) => {
         onClose={() => setShowTimePicker(false)}
         onConfirm={setReminderTime}
         initialTime={reminderTime}
+      />
+      <ConfirmDialog
+        open={!!confirmDeletePreset}
+        onConfirm={() => {
+          if (confirmDeletePreset) { onDeletePreset(confirmDeletePreset); playDelete(); }
+          setConfirmDeletePreset(null);
+        }}
+        onCancel={() => setConfirmDeletePreset(null)}
+        title="Delete Preset?"
+        description="Are you sure you want to delete this preset?"
       />
     </>
   );
