@@ -21,6 +21,7 @@ export interface Task {
   createdAt: string;
   sortOrder: number;
   customSectionId?: string;
+  taskDate: string;
 }
 
 export interface Section {
@@ -135,6 +136,7 @@ export function useAppStore() {
             bandaids: t.bandaids || [], problems: (t.problems as unknown as Problem[]) || [],
             reminderTime: t.reminder_time || undefined, iconUrls, createdAt: t.created_at,
             sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
+            taskDate: raw.task_date || new Date().toISOString().split('T')[0],
           };
         }).sort((a, b) => {
           if (a.completed !== b.completed) return a.completed ? 1 : -1;
@@ -184,7 +186,7 @@ export function useAppStore() {
   // --- Main tasks (exclude custom section tasks) ---
   const mainTasks = data.tasks.filter(t => !t.customSectionId);
 
-  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'>) => {
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'> & { taskDate?: string }) => {
     if (!user) return;
     let utcReminderTime: string | null = null;
     if (task.reminderTime) {
@@ -197,11 +199,12 @@ export function useAppStore() {
     const incompleteTasks = data.tasks.filter(t => !t.completed);
     const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
     const newSortOrder = maxSortOrder + 1;
+    const taskDate = task.taskDate || new Date().toISOString().split('T')[0];
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
       reminder_time: utcReminderTime, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
       problems: [] as unknown as Json, custom_section_id: task.customSectionId || null,
-      sort_order: newSortOrder,
+      sort_order: newSortOrder, task_date: taskDate,
     } as any).select().single();
     if (inserted && !error) {
       const raw = inserted as any;
@@ -210,6 +213,7 @@ export function useAppStore() {
         bandaids: inserted.bandaids || [], problems: [], reminderTime: inserted.reminder_time || undefined,
         iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []), createdAt: inserted.created_at,
         sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
+        taskDate: raw.task_date || taskDate,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
     }

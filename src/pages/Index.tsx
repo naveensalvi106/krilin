@@ -1,19 +1,21 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, Bot, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, X } from 'lucide-react';
+import { Zap, CalendarDays as CalendarIcon, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, X } from 'lucide-react';
+import { format } from 'date-fns';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
 import StreakOrb from '@/components/StreakOrb';
 import TaskCard from '@/components/TaskCard';
 import AddTaskForm from '@/components/AddTaskForm';
-import RevivalProtocol from '@/components/RevivalProtocol';
-import Notepad from '@/components/Notepad';
-import ChatWidget from '@/components/ChatWidget';
 import StickerManager, { useStickers } from '@/components/StickerManager';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { playTab, playOpen, playClick, playDelete, playAddTask, playClose } from '@/lib/sounds';
+
+const RevivalProtocol = lazy(() => import('@/components/RevivalProtocol'));
+const Notepad = lazy(() => import('@/components/Notepad'));
+const CalendarWidget = lazy(() => import('@/components/CalendarWidget'));
 
 const Index = () => {
   const store = useAppStore();
@@ -22,26 +24,33 @@ const Index = () => {
   usePushSubscription();
   const { stickers, loading: stickersLoading, uploadSticker, deleteSticker } = useStickers();
   const [showProfile, setShowProfile] = useState(false);
-  const [showChat, setShowChat] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const dragOverId = useRef<string | null>(null);
 
-  // Custom sections (side tasks)
   const [activeTab, setActiveTab] = useState<string | null>(null);
   const [showAddSection, setShowAddSection] = useState(false);
   const [newSectionName, setNewSectionName] = useState('');
   const [confirmDeleteSection, setConfirmDeleteSection] = useState<string | null>(null);
+
+  const selectedDateStr = format(selectedDate, 'yyyy-MM-dd');
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const isViewingToday = selectedDateStr === todayStr;
 
   const handleDragStart = (id: string) => setDraggedId(id);
   const handleDragOver = (e: React.DragEvent, id: string) => { e.preventDefault(); dragOverId.current = id; };
   const handleDragEnd = () => {
     if (!draggedId || !dragOverId.current || draggedId === dragOverId.current) { setDraggedId(null); return; }
     const currentTasks = activeTab
-      ? store.allTasks.filter(t => t.customSectionId === activeTab).sort((a, b) => {
+      ? store.allTasks.filter(t => t.customSectionId === activeTab && t.taskDate === selectedDateStr).sort((a, b) => {
           if (a.completed !== b.completed) return a.completed ? 1 : -1;
           return a.sortOrder - b.sortOrder;
         })
-      : [...store.tasks];
+      : store.allTasks.filter(t => !t.customSectionId && t.taskDate === selectedDateStr).sort((a, b) => {
+          if (a.completed !== b.completed) return a.completed ? 1 : -1;
+          return a.sortOrder - b.sortOrder;
+        });
     const items = [...currentTasks];
     const fromIdx = items.findIndex(t => t.id === draggedId);
     const toIdx = items.findIndex(t => t.id === dragOverId.current);
@@ -60,24 +69,47 @@ const Index = () => {
     setShowAddSection(false);
   };
 
-  // Derive visible tasks based on active tab
-  const activeCustomSection = store.customSections.find(cs => cs.id === activeTab);
+  // Filter tasks by selected date
+  const dateFilteredMainTasks = store.allTasks.filter(t => !t.customSectionId && t.taskDate === selectedDateStr).sort((a, b) => {
+    if (a.completed !== b.completed) return a.completed ? 1 : -1;
+    return a.sortOrder - b.sortOrder;
+  });
+
   const sectionTasks = activeTab
-    ? store.allTasks.filter(t => t.customSectionId === activeTab).sort((a, b) => {
+    ? store.allTasks.filter(t => t.customSectionId === activeTab && t.taskDate === selectedDateStr).sort((a, b) => {
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
         return a.sortOrder - b.sortOrder;
       })
-    : store.tasks;
+    : dateFilteredMainTasks;
+
   const sectionCompletedCount = sectionTasks.filter(t => t.completed).length;
   const sectionTotalCount = sectionTasks.length;
 
+  // Task count by date for calendar dots
+  const taskCountByDate = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const t of store.allTasks) {
+      if (t.taskDate) {
+        counts[t.taskDate] = (counts[t.taskDate] || 0) + 1;
+      }
+    }
+    return counts;
+  }, [store.allTasks]);
+
   const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => {
     if (activeTab) {
-      store.addTask({ ...task, sectionId: 'custom', customSectionId: activeTab });
+      store.addTask({ ...task, customSectionId: activeTab, taskDate: selectedDateStr });
     } else {
-      store.addTask(task);
+      store.addTask({ ...task, taskDate: selectedDateStr });
     }
   };
+
+  // Streak only considers today's main tasks
+  const todayMainTasks = store.allTasks.filter(t => !t.customSectionId && t.taskDate === todayStr);
+  const todayCompleted = todayMainTasks.filter(t => t.completed).length;
+  const todayTotal = todayMainTasks.length;
+  const streakPercent = todayTotal > 0 ? Math.round((todayCompleted / todayTotal) * 100) : 0;
+  const isGolden = streakPercent === 100 && todayTotal > 0;
 
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
 
@@ -111,8 +143,8 @@ const Index = () => {
                     {[
                       { icon: Mail, label: 'Email', value: user?.email },
                       { icon: CalendarDays, label: 'Member since', value: memberSince },
-                      { icon: CheckCircle2, label: 'Tasks completed', value: `${store.completedCount} / ${store.totalCount}` },
-                      { icon: Zap, label: "Today's progress", value: `${store.streakPercent}%` },
+                      { icon: CheckCircle2, label: 'Tasks completed', value: `${todayCompleted} / ${todayTotal}` },
+                      { icon: Zap, label: "Today's progress", value: `${streakPercent}%` },
                     ].map(({ icon: Icon, label, value }) => (
                       <div key={label} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: 'hsl(15, 10%, 10%)' }}>
                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -136,10 +168,23 @@ const Index = () => {
             </AnimatePresence>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => { setShowChat(true); playOpen(); }} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="AI Assistant">
-              <Bot className="w-5 h-5" />
+            <button
+              onClick={() => { setShowCalendar(true); playOpen(); }}
+              className="w-9 h-9 solid-circle hover:scale-110 transition-transform relative"
+              title="Calendar"
+              style={!isViewingToday ? {
+                background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(15, 90%, 45%))',
+                boxShadow: '0 0 10px hsl(25, 100%, 50% / 0.4)',
+              } : undefined}
+            >
+              <CalendarIcon className="w-5 h-5" />
+              {!isViewingToday && (
+                <span className="absolute -bottom-0.5 text-[8px] font-bold text-white">{format(selectedDate, 'd')}</span>
+              )}
             </button>
-            <Notepad />
+            <Suspense fallback={null}>
+              <Notepad />
+            </Suspense>
           </div>
         </div>
       </div>
@@ -147,12 +192,41 @@ const Index = () => {
       {showProfile && <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />}
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)]">
+        {/* Date indicator when not viewing today */}
+        {!isViewingToday && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between rounded-xl px-4 py-2"
+            style={{
+              background: 'linear-gradient(135deg, hsl(20, 30%, 12%), hsl(15, 20%, 8%))',
+              border: '1px solid hsl(20, 60%, 30%)',
+            }}
+          >
+            <span className="text-sm font-display text-gradient-fire">
+              {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+            </span>
+            <button
+              onClick={() => { setSelectedDate(new Date()); playTab(); }}
+              className="text-xs px-3 py-1 rounded-full font-medium text-primary-foreground"
+              style={{
+                background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(15, 90%, 45%))',
+              }}
+            >
+              Today
+            </button>
+          </motion.div>
+        )}
+
         {activeTab === null && (() => {
-          const nextTask = store.tasks.find(t => !t.completed);
+          const nextTask = dateFilteredMainTasks.find(t => !t.completed);
           const nextTaskSection = nextTask ? store.sections.find(s => s.id === nextTask.sectionId) : undefined;
           return (
-            <StreakOrb percent={store.streakPercent} isGolden={store.isGolden} streak={store.currentStreak}
-              completedCount={store.completedCount} totalCount={store.totalCount}
+            <StreakOrb percent={isViewingToday ? streakPercent : (sectionTotalCount > 0 ? Math.round((sectionCompletedCount / sectionTotalCount) * 100) : 0)}
+              isGolden={isViewingToday ? isGolden : (sectionCompletedCount === sectionTotalCount && sectionTotalCount > 0)}
+              streak={store.currentStreak}
+              completedCount={isViewingToday ? todayCompleted : sectionCompletedCount}
+              totalCount={isViewingToday ? todayTotal : sectionTotalCount}
               nextTask={nextTask} nextTaskSection={nextTaskSection} />
           );
         })()}
@@ -226,7 +300,11 @@ const Index = () => {
           <div className="space-y-3">
             {sectionTasks.length === 0 ? (
               <div className="glass-panel bevel p-8 text-center">
-                <p className="text-muted-foreground text-sm">{activeTab ? 'No tasks in this section yet. Add one above!' : 'No tasks yet. Add your first task to start building your system.'}</p>
+                <p className="text-muted-foreground text-sm">
+                  {!isViewingToday
+                    ? `No tasks planned for ${format(selectedDate, 'MMMM d')}. Add tasks to plan ahead!`
+                    : activeTab ? 'No tasks in this section yet. Add one above!' : 'No tasks yet. Add your first task to start building your system.'}
+                </p>
               </div>
             ) : (
               sectionTasks.map(task => (
@@ -255,11 +333,15 @@ const Index = () => {
           </div>
         </div>
 
-        {activeTab === null && <RevivalProtocol
-          revivalVideos={store.revivalVideos} revivalSteps={store.revivalSteps}
-          onAddVideo={store.addRevivalVideo} onRemoveVideo={store.removeRevivalVideo}
-          onAddStep={store.addRevivalStep} onRemoveStep={store.removeRevivalStep}
-        />}
+        {activeTab === null && (
+          <Suspense fallback={null}>
+            <RevivalProtocol
+              revivalVideos={store.revivalVideos} revivalSteps={store.revivalSteps}
+              onAddVideo={store.addRevivalVideo} onRemoveVideo={store.removeRevivalVideo}
+              onAddStep={store.addRevivalStep} onRemoveStep={store.removeRevivalStep}
+            />
+          </Suspense>
+        )}
       </div>
 
       <ConfirmDialog
@@ -276,8 +358,15 @@ const Index = () => {
         description="This will delete the section and all its tasks. Are you sure?"
       />
 
-      <ChatWidget open={showChat} onClose={() => { setShowChat(false); playClose(); }} sections={store.sections} tasks={store.tasks}
-        onAddTask={store.addTask} onToggleTask={store.toggleTask} onDeleteTask={store.deleteTask} />
+      <Suspense fallback={null}>
+        <CalendarWidget
+          open={showCalendar}
+          onClose={() => { setShowCalendar(false); playClose(); }}
+          selectedDate={selectedDate}
+          onSelectDate={setSelectedDate}
+          taskCountByDate={taskCountByDate}
+        />
+      </Suspense>
     </div>
   );
 };
