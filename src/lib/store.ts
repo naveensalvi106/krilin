@@ -55,6 +55,7 @@ export interface RevivalStep {
   id: string;
   step: number;
   text: string;
+  description: string;
 }
 
 export interface Visualization {
