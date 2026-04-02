@@ -481,7 +481,7 @@ export function useAppStore() {
     addTask, toggleTask, deleteTask, editTask, addSection,
     addCustomSection, editCustomSection, deleteCustomSection,
     addBandaid, removeBandaid, addProblem, removeProblem,
-    addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep,
+    addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep, reorderRevivalSteps, updateRevivalStep,
     addVisualization, removeVisualization, reorderTasks,
     savePreset, deletePreset,
     today, completedCount, totalCount, streakPercent, isGolden, currentStreak, loaded,
