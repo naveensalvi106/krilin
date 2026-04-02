@@ -350,6 +350,7 @@ const Index = () => {
               revivalVideos={store.revivalVideos} revivalSteps={store.revivalSteps}
               onAddVideo={store.addRevivalVideo} onRemoveVideo={store.removeRevivalVideo}
               onAddStep={store.addRevivalStep} onRemoveStep={store.removeRevivalStep}
+              onReorderSteps={store.reorderRevivalSteps} onUpdateStep={store.updateRevivalStep}
             />
           </Suspense>
         )}
