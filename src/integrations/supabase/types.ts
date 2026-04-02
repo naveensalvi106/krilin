@@ -140,6 +140,7 @@ export type Database = {
       revival_steps: {
         Row: {
           created_at: string
+          description: string
           id: string
           step: number
           text: string
@@ -147,6 +148,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          description?: string
           id?: string
           step: number
           text: string
@@ -154,6 +156,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          description?: string
           id?: string
           step?: number
           text?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.revival_steps ADD COLUMN description text NOT NULL DEFAULT '';
