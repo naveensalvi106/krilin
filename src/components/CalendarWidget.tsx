@@ -10,9 +10,10 @@ interface CalendarWidgetProps {
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   taskCountByDate?: Record<string, number>;
+  taskStatsByDate?: Record<string, { total: number; completed: number }>;
 }
 
-const CalendarWidget = ({ open, onClose, selectedDate, onSelectDate, taskCountByDate = {} }: CalendarWidgetProps) => {
+const CalendarWidget = ({ open, onClose, selectedDate, onSelectDate, taskCountByDate = {}, taskStatsByDate = {} }: CalendarWidgetProps) => {
   const [viewMonth, setViewMonth] = useState(new Date());
 
   const monthStart = startOfMonth(viewMonth);
@@ -102,10 +103,16 @@ const CalendarWidget = ({ open, onClose, selectedDate, onSelectDate, taskCountBy
             <div className="grid grid-cols-7 px-4 pb-4 gap-y-1">
               {days.map(day => {
                 const dateKey = format(day, 'yyyy-MM-dd');
+                const stats = taskStatsByDate[dateKey];
                 const taskCount = taskCountByDate[dateKey] || 0;
                 const isSelected = isSameDay(day, selectedDate);
                 const isCurrentMonth = isSameMonth(day, viewMonth);
                 const isTodayDate = isToday(day);
+
+                // Completion percentage for fill
+                const completionPct = stats && stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
+                const isFullyComplete = completionPct === 100 && taskCount > 0;
+                const hasPartialCompletion = completionPct > 0 && completionPct < 100;
 
                 return (
                   <button
@@ -122,6 +129,13 @@ const CalendarWidget = ({ open, onClose, selectedDate, onSelectDate, taskCountBy
                             color: 'white',
                             fontWeight: 700,
                           }
+                        : isFullyComplete
+                        ? {
+                            background: 'linear-gradient(135deg, hsl(45, 100%, 50%), hsl(35, 90%, 40%))',
+                            boxShadow: '0 0 8px hsl(45, 100%, 50% / 0.3)',
+                            color: 'white',
+                            fontWeight: 600,
+                          }
                         : isTodayDate
                         ? {
                             background: 'hsl(20, 30%, 16%)',
@@ -133,14 +147,34 @@ const CalendarWidget = ({ open, onClose, selectedDate, onSelectDate, taskCountBy
                     }
                   >
                     <span>{format(day, 'd')}</span>
-                    {taskCount > 0 && (
+                    {/* Completion fill bar at bottom */}
+                    {hasPartialCompletion && !isSelected && (
+                      <span
+                        className="absolute bottom-0.5 left-1/2 -translate-x-1/2 h-1 rounded-full"
+                        style={{
+                          width: `${Math.max(completionPct * 0.6, 15)}%`,
+                          background: 'linear-gradient(90deg, hsl(30, 100%, 55%), hsl(45, 100%, 55%))',
+                          boxShadow: '0 0 4px hsl(35, 100%, 55% / 0.5)',
+                        }}
+                      />
+                    )}
+                    {/* Full gold dot for 100% */}
+                    {isFullyComplete && !isSelected && (
+                      <span className="absolute bottom-0.5 text-[7px]">✓</span>
+                    )}
+                    {/* Task dot for days with tasks but 0% completion */}
+                    {taskCount > 0 && completionPct === 0 && !isSelected && (
                       <span
                         className="absolute bottom-0.5 w-1.5 h-1.5 rounded-full"
                         style={{
-                          background: isSelected ? 'white' : 'hsl(30, 100%, 55%)',
-                          boxShadow: isSelected ? 'none' : '0 0 4px hsl(30, 100%, 55% / 0.6)',
+                          background: 'hsl(0, 60%, 50%)',
+                          boxShadow: '0 0 4px hsl(0, 60%, 50% / 0.6)',
                         }}
                       />
+                    )}
+                    {/* Selected day dot */}
+                    {isSelected && taskCount > 0 && (
+                      <span className="absolute bottom-0.5 w-1.5 h-1.5 rounded-full bg-white" />
                     )}
                   </button>
                 );

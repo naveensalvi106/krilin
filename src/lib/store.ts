@@ -55,6 +55,7 @@ export interface RevivalStep {
   id: string;
   step: number;
   text: string;
+  description: string;
 }
 
 export interface Visualization {
@@ -158,7 +159,7 @@ export function useAppStore() {
         customSections: dbCustomSections,
         streaks: [],
         revivalVideos: (videosRes.data || []).map(v => ({ id: v.id, title: v.title, url: v.url, channel: v.channel })),
-        revivalSteps: (stepsRes.data || []).map(s => ({ id: s.id, step: s.step, text: s.text })),
+        revivalSteps: (stepsRes.data || []).map(s => ({ id: s.id, step: s.step, text: s.text, description: (s as any).description || '' })),
         visualizations: (visRes.data || []).map(v => ({ id: v.id, text: v.text, image: v.image || undefined, taskId: (v as any).task_id || undefined })),
         presets: ((presetsRes.data as any[]) || []).map((p: any) => ({
           id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined,
@@ -372,14 +373,33 @@ export function useAppStore() {
     setData(d => ({ ...d, revivalVideos: d.revivalVideos.filter(v => v.id !== id) }));
   }, []);
 
-  const addRevivalStep = useCallback(async (text: string) => {
+  const addRevivalStep = useCallback(async (text: string, description?: string) => {
     if (!user) return;
     const step = data.revivalSteps.length + 1;
-    const { data: inserted } = await supabase.from('revival_steps').insert({ user_id: user.id, step, text }).select().single();
+    const { data: inserted } = await supabase.from('revival_steps').insert({ user_id: user.id, step, text, description: description || '' } as any).select().single();
     if (inserted) {
-      setData(d => ({ ...d, revivalSteps: [...d.revivalSteps, { id: inserted.id, step: inserted.step, text: inserted.text }] }));
+      const s = inserted as any;
+      setData(d => ({ ...d, revivalSteps: [...d.revivalSteps, { id: s.id, step: s.step, text: s.text, description: s.description || '' }] }));
     }
   }, [user, data.revivalSteps.length]);
+
+  const reorderRevivalSteps = useCallback(async (reordered: RevivalStep[]) => {
+    const updated = reordered.map((s, i) => ({ ...s, step: i + 1 }));
+    setData(d => ({ ...d, revivalSteps: updated }));
+    for (const s of updated) {
+      supabase.from('revival_steps').update({ step: s.step } as any).eq('id', s.id).then();
+    }
+  }, []);
+
+  const updateRevivalStep = useCallback(async (id: string, updates: { text?: string; description?: string }) => {
+    const dbUpdates: any = {};
+    if (updates.text !== undefined) dbUpdates.text = updates.text;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    await supabase.from('revival_steps').update(dbUpdates as any).eq('id', id);
+    setData(d => ({
+      ...d, revivalSteps: d.revivalSteps.map(s => s.id === id ? { ...s, ...updates } : s),
+    }));
+  }, []);
 
   const removeRevivalStep = useCallback(async (id: string) => {
     await supabase.from('revival_steps').delete().eq('id', id);
@@ -442,7 +462,11 @@ export function useAppStore() {
   const totalCount = mainTasks.length;
   const streakPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isGolden = streakPercent === 100 && totalCount > 0;
-  const currentStreak = Math.max(streakPercent > 0 ? 1 : 0, 1);
+  // Streak = days since April 1, 2026
+  const startDate = new Date(2026, 3, 1); // April 1, 2026
+  const now = new Date();
+  const diffMs = now.getTime() - startDate.getTime();
+  const currentStreak = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
 
   return {
     tasks: mainTasks,
@@ -457,7 +481,7 @@ export function useAppStore() {
     addTask, toggleTask, deleteTask, editTask, addSection,
     addCustomSection, editCustomSection, deleteCustomSection,
     addBandaid, removeBandaid, addProblem, removeProblem,
-    addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep,
+    addRevivalVideo, removeRevivalVideo, addRevivalStep, removeRevivalStep, reorderRevivalSteps, updateRevivalStep,
     addVisualization, removeVisualization, reorderTasks,
     savePreset, deletePreset,
     today, completedCount, totalCount, streakPercent, isGolden, currentStreak, loaded,
