@@ -373,14 +373,33 @@ export function useAppStore() {
     setData(d => ({ ...d, revivalVideos: d.revivalVideos.filter(v => v.id !== id) }));
   }, []);
 
-  const addRevivalStep = useCallback(async (text: string) => {
+  const addRevivalStep = useCallback(async (text: string, description?: string) => {
     if (!user) return;
     const step = data.revivalSteps.length + 1;
-    const { data: inserted } = await supabase.from('revival_steps').insert({ user_id: user.id, step, text }).select().single();
+    const { data: inserted } = await supabase.from('revival_steps').insert({ user_id: user.id, step, text, description: description || '' } as any).select().single();
     if (inserted) {
-      setData(d => ({ ...d, revivalSteps: [...d.revivalSteps, { id: inserted.id, step: inserted.step, text: inserted.text }] }));
+      const s = inserted as any;
+      setData(d => ({ ...d, revivalSteps: [...d.revivalSteps, { id: s.id, step: s.step, text: s.text, description: s.description || '' }] }));
     }
   }, [user, data.revivalSteps.length]);
+
+  const reorderRevivalSteps = useCallback(async (reordered: RevivalStep[]) => {
+    const updated = reordered.map((s, i) => ({ ...s, step: i + 1 }));
+    setData(d => ({ ...d, revivalSteps: updated }));
+    for (const s of updated) {
+      supabase.from('revival_steps').update({ step: s.step } as any).eq('id', s.id).then();
+    }
+  }, []);
+
+  const updateRevivalStep = useCallback(async (id: string, updates: { text?: string; description?: string }) => {
+    const dbUpdates: any = {};
+    if (updates.text !== undefined) dbUpdates.text = updates.text;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    await supabase.from('revival_steps').update(dbUpdates as any).eq('id', id);
+    setData(d => ({
+      ...d, revivalSteps: d.revivalSteps.map(s => s.id === id ? { ...s, ...updates } : s),
+    }));
+  }, []);
 
   const removeRevivalStep = useCallback(async (id: string) => {
     await supabase.from('revival_steps').delete().eq('id', id);
