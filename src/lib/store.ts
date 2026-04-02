@@ -462,7 +462,11 @@ export function useAppStore() {
   const totalCount = mainTasks.length;
   const streakPercent = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
   const isGolden = streakPercent === 100 && totalCount > 0;
-  const currentStreak = Math.max(streakPercent > 0 ? 1 : 0, 1);
+  // Streak = days since April 1, 2026
+  const startDate = new Date(2026, 3, 1); // April 1, 2026
+  const now = new Date();
+  const diffMs = now.getTime() - startDate.getTime();
+  const currentStreak = Math.max(1, Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1);
 
   return {
     tasks: mainTasks,
