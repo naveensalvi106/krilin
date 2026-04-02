@@ -85,16 +85,26 @@ const Index = () => {
   const sectionCompletedCount = sectionTasks.filter(t => t.completed).length;
   const sectionTotalCount = sectionTasks.length;
 
-  // Task count by date for calendar dots
-  const taskCountByDate = useMemo(() => {
-    const counts: Record<string, number> = {};
+  // Task count and completion by date for calendar
+  const taskStatsByDate = useMemo(() => {
+    const stats: Record<string, { total: number; completed: number }> = {};
     for (const t of store.allTasks) {
       if (t.taskDate) {
-        counts[t.taskDate] = (counts[t.taskDate] || 0) + 1;
+        if (!stats[t.taskDate]) stats[t.taskDate] = { total: 0, completed: 0 };
+        stats[t.taskDate].total++;
+        if (t.completed) stats[t.taskDate].completed++;
       }
     }
-    return counts;
+    return stats;
   }, [store.allTasks]);
+
+  const taskCountByDate = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const [date, s] of Object.entries(taskStatsByDate)) {
+      counts[date] = s.total;
+    }
+    return counts;
+  }, [taskStatsByDate]);
 
   const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => {
     if (activeTab) {
