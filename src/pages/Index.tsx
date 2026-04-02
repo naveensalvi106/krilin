@@ -377,6 +377,7 @@ const Index = () => {
           selectedDate={selectedDate}
           onSelectDate={setSelectedDate}
           taskCountByDate={taskCountByDate}
+          taskStatsByDate={taskStatsByDate}
         />
       </Suspense>
     </div>
