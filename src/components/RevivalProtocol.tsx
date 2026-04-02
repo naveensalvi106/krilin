@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldAlert, ExternalLink, ChevronRight, Plus, X, Play, ShieldCheck, Link, Type } from 'lucide-react';
+import { ShieldAlert, ExternalLink, ChevronRight, ChevronDown, Plus, X, Play, ShieldCheck, Link, Type, GripVertical, FileText } from 'lucide-react';
 import type { RevivalVideo, RevivalStep } from '@/lib/store';
 import ConfirmDialog from './ConfirmDialog';
 import { playOpen, playClose, playClick, playComplete, playDelete, playAddTask, playSurvived } from '@/lib/sounds';
@@ -10,11 +10,13 @@ interface RevivalProtocolProps {
   revivalSteps: RevivalStep[];
   onAddVideo: (video: Omit<RevivalVideo, 'id'>) => void;
   onRemoveVideo: (id: string) => void;
-  onAddStep: (text: string) => void;
+  onAddStep: (text: string, description?: string) => void;
   onRemoveStep: (id: string) => void;
+  onReorderSteps: (steps: RevivalStep[]) => void;
+  onUpdateStep: (id: string, updates: { text?: string; description?: string }) => void;
 }
 
-const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVideo, onAddStep, onRemoveStep }: RevivalProtocolProps) => {
+const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVideo, onAddStep, onRemoveStep, onReorderSteps, onUpdateStep }: RevivalProtocolProps) => {
   const [active, setActive] = useState(false);
   const [showAddVideo, setShowAddVideo] = useState(false);
   const [showAddStep, setShowAddStep] = useState(false);
@@ -22,8 +24,12 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
   const [videoUrl, setVideoUrl] = useState('');
   const [videoChannel, setVideoChannel] = useState('');
   const [stepText, setStepText] = useState('');
+  const [stepDesc, setStepDesc] = useState('');
   const [completedSteps, setCompletedSteps] = useState<Set<string>>(new Set());
   const [confirmRemove, setConfirmRemove] = useState<{ type: 'video' | 'step'; id: string } | null>(null);
+  const [expandedStep, setExpandedStep] = useState<string | null>(null);
+  const [draggedStepId, setDraggedStepId] = useState<string | null>(null);
+  const dragOverStepId = useRef<string | null>(null);
 
   const stepPercent = revivalSteps.length > 0
     ? Math.round((completedSteps.size / revivalSteps.length) * 100)
@@ -33,7 +39,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
   const toggleStep = (id: string) => {
     setCompletedSteps(prev => {
       const next = new Set(prev);
-      if (next.has(id)) { next.delete(id); } 
+      if (next.has(id)) { next.delete(id); }
       else { next.add(id); playComplete(); }
       return next;
     });
@@ -56,8 +62,9 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
 
   const handleAddStep = () => {
     if (stepText.trim()) {
-      onAddStep(stepText.trim());
+      onAddStep(stepText.trim(), stepDesc.trim() || undefined);
       setStepText('');
+      setStepDesc('');
       setShowAddStep(false);
       playAddTask();
     }
@@ -70,10 +77,29 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
     setConfirmRemove(null);
   };
 
+  // Drag handlers for steps
+  const handleStepDragStart = (id: string) => setDraggedStepId(id);
+  const handleStepDragOver = (e: React.DragEvent, id: string) => { e.preventDefault(); dragOverStepId.current = id; };
+  const handleStepDragEnd = () => {
+    if (!draggedStepId || !dragOverStepId.current || draggedStepId === dragOverStepId.current) {
+      setDraggedStepId(null); return;
+    }
+    const items = [...revivalSteps];
+    const fromIdx = items.findIndex(s => s.id === draggedStepId);
+    const toIdx = items.findIndex(s => s.id === dragOverStepId.current);
+    if (fromIdx === -1 || toIdx === -1) { setDraggedStepId(null); return; }
+    const [moved] = items.splice(fromIdx, 1);
+    items.splice(toIdx, 0, moved);
+    onReorderSteps(items);
+    setDraggedStepId(null);
+    dragOverStepId.current = null;
+    playClick();
+  };
+
   if (!active) {
     return (
       <button
-      onClick={() => { setActive(true); playOpen(); }}
+        onClick={() => { setActive(true); playOpen(); }}
         className="w-full rounded-xl p-5 flex items-center gap-4 group transition-all hover:scale-[1.01]"
         style={{
           background: 'linear-gradient(145deg, hsl(0, 90%, 58%), hsl(355, 75%, 42%), hsl(0, 0%, 15%))',
@@ -127,6 +153,7 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
         </span>
       </div>
 
+      {/* Emergency Steps */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-white/80">Emergency Steps</span>
@@ -134,9 +161,10 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
         </div>
 
         {showAddStep && (
-          <div className="flex gap-2">
-            <input value={stepText} onChange={e => setStepText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddStep()} placeholder="e.g. Do 10 jumping jacks..." className="flex-1 bg-white/15 border border-white/25 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/50 focus:outline-none focus:border-white/50" />
-            <button onClick={handleAddStep} className="px-3 py-1 text-xs font-bold rounded-xl text-white" style={{ background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 100%, 50%))', boxShadow: '0 2px 8px hsl(40, 100%, 50% / 0.3), inset 0 1px 0 hsl(50, 100%, 70%)' }}>Add</button>
+          <div className="space-y-2 p-3 rounded-xl" style={{ background: 'hsla(0, 0%, 100%, 0.12)', border: '1px solid hsla(0, 0%, 100%, 0.2)' }}>
+            <input value={stepText} onChange={e => setStepText(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleAddStep()} placeholder="Step name..." className="w-full bg-transparent text-sm text-white placeholder:text-white/50 focus:outline-none border-b border-white/20 pb-1" />
+            <textarea value={stepDesc} onChange={e => setStepDesc(e.target.value)} placeholder="Description (optional)..." rows={2} className="w-full bg-transparent text-xs text-white/80 placeholder:text-white/40 focus:outline-none resize-none" />
+            <button onClick={handleAddStep} className="w-full py-1.5 text-xs font-bold rounded-xl text-white" style={{ background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 100%, 50%))', boxShadow: '0 2px 8px hsl(40, 100%, 50% / 0.3), inset 0 1px 0 hsl(50, 100%, 70%)' }}>Add Step</button>
           </div>
         )}
 
@@ -146,24 +174,53 @@ const RevivalProtocol = ({ revivalVideos, revivalSteps, onAddVideo, onRemoveVide
 
         {revivalSteps.map((s) => {
           const done = completedSteps.has(s.id);
+          const isExpanded = expandedStep === s.id;
           return (
-            <button key={s.id} onClick={() => toggleStep(s.id)} className={`w-full flex items-center gap-3 p-3 rounded-xl text-left text-sm transition-all group ${done ? 'opacity-70' : ''}`}
+            <div
+              key={s.id}
+              draggable
+              onDragStart={() => handleStepDragStart(s.id)}
+              onDragOver={(e) => handleStepDragOver(e, s.id)}
+              onDragEnd={handleStepDragEnd}
+              className={`rounded-xl transition-all ${draggedStepId === s.id ? 'opacity-50' : ''}`}
               style={{
                 background: done ? 'hsla(120, 40%, 35%, 0.4)' : 'hsla(0, 0%, 100%, 0.12)',
                 border: `1px solid ${done ? 'hsla(120, 50%, 50%, 0.4)' : 'hsla(0, 0%, 100%, 0.2)'}`,
                 boxShadow: 'inset 0 1px 0 hsla(0,0%,100%,0.1)',
               }}
             >
-              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: done ? 'hsl(120, 50%, 40%)' : 'linear-gradient(135deg, hsl(45, 100%, 60%), hsl(30, 100%, 50%))', boxShadow: '0 2px 6px hsla(0,0%,0%,0.3), inset 0 1px 0 hsla(0,0%,100%,0.3)' }}>
-                {done ? '✓' : s.step}
-              </span>
-              <span className={`flex-1 text-white ${done ? 'line-through text-white/60' : ''}`}>{s.text}</span>
-              <button onClick={e => { e.stopPropagation(); setConfirmRemove({ type: 'step', id: s.id }); }} className="opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3.5 h-3.5 text-white/60 hover:text-white" /></button>
-            </button>
+              <button onClick={() => toggleStep(s.id)} className={`w-full flex items-center gap-2 p-3 text-left text-sm group ${done ? 'opacity-70' : ''}`}>
+                <GripVertical className="w-3.5 h-3.5 text-white/40 shrink-0 cursor-grab" />
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ background: done ? 'hsl(120, 50%, 40%)' : 'linear-gradient(135deg, hsl(45, 100%, 60%), hsl(30, 100%, 50%))', boxShadow: '0 2px 6px hsla(0,0%,0%,0.3), inset 0 1px 0 hsla(0,0%,100%,0.3)' }}>
+                  {done ? '✓' : s.step}
+                </span>
+                <span className={`flex-1 text-white ${done ? 'line-through text-white/60' : ''}`}>{s.text}</span>
+                {s.description && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setExpandedStep(isExpanded ? null : s.id); playClick(); }}
+                    className="p-1 rounded-full hover:bg-white/10 transition-colors"
+                  >
+                    {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-white/60" /> : <FileText className="w-3.5 h-3.5 text-white/60" />}
+                  </button>
+                )}
+                <button onClick={e => { e.stopPropagation(); setConfirmRemove({ type: 'step', id: s.id }); }} className="opacity-0 group-hover:opacity-100 transition-opacity"><X className="w-3.5 h-3.5 text-white/60 hover:text-white" /></button>
+              </button>
+              {isExpanded && s.description && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-4 pb-3 pl-12"
+                >
+                  <p className="text-xs text-white/70 leading-relaxed">{s.description}</p>
+                </motion.div>
+              )}
+            </div>
           );
         })}
       </div>
 
+      {/* Motivation Videos */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-xs font-medium text-white/80">Motivation Fuel</span>
