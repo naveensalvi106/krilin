@@ -106,7 +106,7 @@ const Index = () => {
     return counts;
   }, [taskStatsByDate]);
 
-  const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => {
+  const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[] }) => {
     if (activeTab) {
       store.addTask({ ...task, customSectionId: activeTab, taskDate: selectedDateStr });
     } else {
