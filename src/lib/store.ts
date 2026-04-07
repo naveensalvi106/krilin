@@ -166,6 +166,7 @@ export function useAppStore() {
         presets: ((presetsRes.data as any[]) || []).map((p: any) => ({
           id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined,
           iconUrls: p.icon_urls || [], bandaids: p.bandaids || [], problems: (p.problems as unknown as Problem[]) || [],
+          visualizations: (p.visualizations as any[]) || [],
         })),
       });
       setLoaded(true);
@@ -447,10 +448,11 @@ export function useAppStore() {
       user_id: user.id, title: preset.title, section_id: preset.sectionId,
       reminder_time: preset.reminderTime || null, icon_urls: preset.iconUrls || [],
       bandaids: preset.bandaids || [], problems: (preset.problems || []) as unknown as Json,
+      visualizations: (preset.visualizations || []) as unknown as Json,
     } as any).select().single();
     if (inserted) {
       const p = inserted as any;
-      setData(d => ({ ...d, presets: [...d.presets, { id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined, iconUrls: p.icon_urls || [], bandaids: p.bandaids || [], problems: (p.problems as unknown as Problem[]) || [] }] }));
+      setData(d => ({ ...d, presets: [...d.presets, { id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined, iconUrls: p.icon_urls || [], bandaids: p.bandaids || [], problems: (p.problems as unknown as Problem[]) || [], visualizations: (p.visualizations as any[]) || [] }] }));
     }
   }, [user]);
 
