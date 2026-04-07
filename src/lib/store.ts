@@ -204,7 +204,7 @@ export function useAppStore() {
   // --- Main tasks (exclude custom section tasks) ---
   const mainTasks = data.tasks.filter(t => !t.customSectionId);
 
-  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt' | 'problems'> & { taskDate?: string }) => {
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt'> & { taskDate?: string; problems?: Problem[] }) => {
     if (!user) return;
     let utcReminderTime: string | null = null;
     if (task.reminderTime) {
@@ -213,22 +213,23 @@ export function useAppStore() {
       now.setHours(h, m, 0, 0);
       utcReminderTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
     }
-    // Place new task after all incomplete tasks
     const incompleteTasks = data.tasks.filter(t => !t.completed);
     const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
     const newSortOrder = maxSortOrder + 1;
     const taskDate = task.taskDate || new Date().toISOString().split('T')[0];
+    const problems = task.problems || [];
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
       reminder_time: utcReminderTime, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
-      problems: [] as unknown as Json, custom_section_id: task.customSectionId || null,
+      problems: problems as unknown as Json, custom_section_id: task.customSectionId || null,
       sort_order: newSortOrder, task_date: taskDate,
     } as any).select().single();
     if (inserted && !error) {
       const raw = inserted as any;
       const newTask: Task = {
         id: inserted.id, title: inserted.title, sectionId: inserted.section_id, completed: inserted.completed,
-        bandaids: inserted.bandaids || [], problems: [], reminderTime: inserted.reminder_time || undefined,
+        bandaids: inserted.bandaids || [], problems: (inserted.problems as unknown as Problem[]) || [],
+        reminderTime: inserted.reminder_time || undefined,
         iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []), createdAt: inserted.created_at,
         sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
         taskDate: raw.task_date || taskDate,
