@@ -108,12 +108,17 @@ const Index = () => {
     return counts;
   }, [taskStatsByDate]);
 
-  const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[] }) => {
+  const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[]; visualizations?: { text: string; image?: string }[] }) => {
+    const presetVis = task.visualizations || [];
     const taskWithProblems = { ...task, problems: task.problems || [], taskDate: selectedDateStr };
     if (activeTab) {
-      store.addTask({ ...taskWithProblems, customSectionId: activeTab });
+      store.addTask({ ...taskWithProblems, customSectionId: activeTab }).then(taskId => {
+        if (taskId) presetVis.forEach(v => store.addVisualization(v.text, v.image, taskId));
+      });
     } else {
-      store.addTask(taskWithProblems);
+      store.addTask(taskWithProblems).then(taskId => {
+        if (taskId) presetVis.forEach(v => store.addVisualization(v.text, v.image, taskId));
+      });
     }
   };
 
