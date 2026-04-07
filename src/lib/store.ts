@@ -76,11 +76,11 @@ export interface TaskPreset {
 }
 
 export const DEFAULT_SECTIONS: Section[] = [
-  { id: 'health', name: 'Health', icon: 'Heart', color: '0 85% 55%' },
+  { id: 'health', name: 'Diet', icon: 'Heart', color: '140 70% 45%' },
   { id: 'work', name: 'Work', icon: 'Laptop', color: '30 90% 50%' },
   { id: 'learning', name: 'Learning', icon: 'BookOpen', color: '200 80% 55%' },
   { id: 'social', name: 'Social', icon: 'MessageCircle', color: '280 70% 55%' },
-  { id: 'fitness', name: 'Fitness', icon: 'Dumbbell', color: '120 60% 45%' },
+  { id: 'fitness', name: 'Fitness', icon: 'Dumbbell', color: '210 10% 65%' },
 ];
 
 interface AppData {
