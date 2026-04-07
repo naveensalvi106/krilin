@@ -73,6 +73,7 @@ export interface TaskPreset {
   iconUrls: string[];
   bandaids: string[];
   problems: Problem[];
+  visualizations: { text: string; image?: string }[];
 }
 
 export const DEFAULT_SECTIONS: Section[] = [
