@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, AlarmClock, Image, Bookmark, X } from 'lucide-react';
+import { Plus, AlarmClock, Image, Bookmark, X, Check } from 'lucide-react';
 import type { Section } from '@/lib/store';
 import type { TaskPreset } from '@/lib/store';
 import type { Sticker } from './StickerManager';
@@ -25,6 +25,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
   const [confirmDeletePreset, setConfirmDeletePreset] = useState<string | null>(null);
+  const [selectedPresetIds, setSelectedPresetIds] = useState<string[]>([]);
 
   const formatDisplay = (time: string) => {
     if (!time) return '';
@@ -37,7 +38,6 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    // Find if there's a loaded preset with problems
     const matchingPreset = presets.find(p => p.title === title.trim() && p.sectionId === sectionId);
     onAdd({ title: title.trim(), sectionId, bandaids: matchingPreset?.bandaids || [], reminderTime: reminderTime || undefined, iconUrls: selectedIcons, sortOrder: 0, problems: matchingPreset?.problems, visualizations: matchingPreset?.visualizations });
     playAddTask();
@@ -47,13 +47,29 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
     setExpanded(false);
   };
 
-  const handleLoadPreset = (preset: TaskPreset) => {
-    setTitle(preset.title);
-    setSectionId(preset.sectionId);
-    setReminderTime(preset.reminderTime || '');
-    setSelectedIcons(preset.iconUrls || []);
-    setShowPresets(false);
+  const togglePresetSelection = (id: string) => {
+    setSelectedPresetIds(prev => prev.includes(id) ? prev.filter(pid => pid !== id) : [...prev, id]);
     playClick();
+  };
+
+  const handleAddSelectedPresets = () => {
+    const selected = presets.filter(p => selectedPresetIds.includes(p.id));
+    selected.forEach(p => {
+      onAdd({
+        title: p.title,
+        sectionId: p.sectionId,
+        bandaids: p.bandaids || [],
+        reminderTime: p.reminderTime || undefined,
+        iconUrls: p.iconUrls || [],
+        sortOrder: 0,
+        problems: p.problems,
+        visualizations: p.visualizations,
+      });
+    });
+    if (selected.length > 0) playAddTask();
+    setSelectedPresetIds([]);
+    setShowPresets(false);
+    setExpanded(false);
   };
 
   const toggleIcon = (url: string) => {
@@ -148,7 +164,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
           {presets.length > 0 && (
             <button
               type="button"
-              onClick={() => { setShowPresets(!showPresets); showPresets ? playClose() : playOpen(); }}
+              onClick={() => { setShowPresets(!showPresets); setSelectedPresetIds([]); showPresets ? playClose() : playOpen(); }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02]"
               style={{
                 background: 'linear-gradient(135deg, hsl(45, 60%, 14%), hsl(30, 40%, 10%))',
@@ -162,18 +178,39 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
           )}
         </div>
 
-        {/* Presets picker */}
+        {/* Presets picker with multi-select */}
         {showPresets && presets.length > 0 && (
           <div className="rounded-xl p-3 border border-border space-y-2" style={{ background: 'hsl(15, 10%, 8%)' }}>
-            <p className="text-xs text-muted-foreground font-medium">📋 Load a preset</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground font-medium">📋 Select presets to add</p>
+              {selectedPresetIds.length > 0 && (
+                <span className="text-[10px] px-2 py-0.5 rounded-full" style={{ background: 'hsl(45, 80%, 50% / 0.2)', color: 'hsl(45, 80%, 60%)' }}>
+                  {selectedPresetIds.length} selected
+                </span>
+              )}
+            </div>
             <div className="space-y-1.5">
               {presets.map(p => {
                 const presetSection = sections.find(s => s.id === p.sectionId);
+                const isSelected = selectedPresetIds.includes(p.id);
                 return (
                   <div key={p.id} className="flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer hover:scale-[1.01] transition-all"
-                    style={{ background: 'hsl(15, 10%, 12%)', border: '1px solid hsl(15, 20%, 18%)' }}
+                    style={{
+                      background: isSelected ? 'hsl(45, 40%, 12%)' : 'hsl(15, 10%, 12%)',
+                      border: isSelected ? '1px solid hsl(45, 60%, 35%)' : '1px solid hsl(15, 20%, 18%)',
+                      boxShadow: isSelected ? '0 0 8px hsl(45, 80%, 50% / 0.15)' : 'none',
+                    }}
                   >
-                    <div className="flex-1 flex items-center gap-2 min-w-0" onClick={() => handleLoadPreset(p)}>
+                    <button type="button" onClick={() => togglePresetSelection(p.id)}
+                      className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all"
+                      style={{
+                        background: isSelected ? 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 90%, 45%))' : 'hsl(15, 10%, 18%)',
+                        border: isSelected ? 'none' : '1px solid hsl(15, 20%, 25%)',
+                      }}
+                    >
+                      {isSelected && <Check className="w-3 h-3 text-white" />}
+                    </button>
+                    <div className="flex-1 flex items-center gap-2 min-w-0" onClick={() => togglePresetSelection(p.id)}>
                       {(p.iconUrls || []).slice(0, 3).map((url, i) => (
                         <img key={i} src={url} alt="" className="w-4 h-4 object-contain shrink-0" />
                       ))}
@@ -197,6 +234,20 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
                 );
               })}
             </div>
+            {selectedPresetIds.length > 0 && (
+              <button
+                type="button"
+                onClick={handleAddSelectedPresets}
+                className="w-full py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.01]"
+                style={{
+                  background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 90%, 45%))',
+                  color: 'hsl(15, 10%, 8%)',
+                  boxShadow: '0 0 16px hsl(45, 100%, 55% / 0.3)',
+                }}
+              >
+                Add {selectedPresetIds.length} Preset{selectedPresetIds.length > 1 ? 's' : ''} as Task{selectedPresetIds.length > 1 ? 's' : ''}
+              </button>
+            )}
           </div>
         )}
 
