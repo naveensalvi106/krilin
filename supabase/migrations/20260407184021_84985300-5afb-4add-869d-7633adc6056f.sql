@@ -1,0 +1,1 @@
+ALTER TABLE public.task_presets ADD COLUMN visualizations jsonb NOT NULL DEFAULT '[]'::jsonb;
