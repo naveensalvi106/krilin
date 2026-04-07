@@ -62,6 +62,41 @@ export type Database = {
         }
         Relationships: []
       }
+      mind_map_nodes: {
+        Row: {
+          created_at: string
+          id: string
+          parent_id: string | null
+          sort_order: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          sort_order?: number
+          text?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parent_id?: string | null
+          sort_order?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mind_map_nodes_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "mind_map_nodes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notepad_sections: {
         Row: {
           content: string
@@ -224,6 +259,7 @@ export type Database = {
           created_at: string
           icon_urls: string[] | null
           id: string
+          problems: Json
           reminder_time: string | null
           section_id: string
           title: string
@@ -234,6 +270,7 @@ export type Database = {
           created_at?: string
           icon_urls?: string[] | null
           id?: string
+          problems?: Json
           reminder_time?: string | null
           section_id: string
           title: string
@@ -244,6 +281,7 @@ export type Database = {
           created_at?: string
           icon_urls?: string[] | null
           id?: string
+          problems?: Json
           reminder_time?: string | null
           section_id?: string
           title?: string
@@ -309,6 +347,65 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tick_list_items: {
+        Row: {
+          completed: boolean
+          created_at: string
+          id: string
+          list_id: string
+          sort_order: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          list_id: string
+          sort_order?: number
+          text: string
+          user_id: string
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string
+          id?: string
+          list_id?: string
+          sort_order?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tick_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "tick_lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tick_lists: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       visualizations: {
         Row: {
