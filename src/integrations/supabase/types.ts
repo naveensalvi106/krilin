@@ -264,6 +264,7 @@ export type Database = {
           section_id: string
           title: string
           user_id: string
+          visualizations: Json
         }
         Insert: {
           bandaids?: string[] | null
@@ -275,6 +276,7 @@ export type Database = {
           section_id: string
           title: string
           user_id: string
+          visualizations?: Json
         }
         Update: {
           bandaids?: string[] | null
@@ -286,6 +288,7 @@ export type Database = {
           section_id?: string
           title?: string
           user_id?: string
+          visualizations?: Json
         }
         Relationships: []
       }

@@ -108,12 +108,19 @@ const Index = () => {
     return counts;
   }, [taskStatsByDate]);
 
-  const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[] }) => {
+  const handleAddTask = async (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[]; visualizations?: { text: string; image?: string }[] }) => {
+    const presetVis = task.visualizations || [];
     const taskWithProblems = { ...task, problems: task.problems || [], taskDate: selectedDateStr };
+    let taskId: string | undefined;
     if (activeTab) {
-      store.addTask({ ...taskWithProblems, customSectionId: activeTab });
+      taskId = await store.addTask({ ...taskWithProblems, customSectionId: activeTab });
     } else {
-      store.addTask(taskWithProblems);
+      taskId = await store.addTask(taskWithProblems);
+    }
+    if (taskId && presetVis.length > 0) {
+      for (const v of presetVis) {
+        store.addVisualization(v.text, v.image, taskId);
+      }
     }
   };
 

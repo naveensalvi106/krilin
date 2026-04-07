@@ -73,6 +73,7 @@ export interface TaskPreset {
   iconUrls: string[];
   bandaids: string[];
   problems: Problem[];
+  visualizations: { text: string; image?: string }[];
 }
 
 export const DEFAULT_SECTIONS: Section[] = [
@@ -165,6 +166,7 @@ export function useAppStore() {
         presets: ((presetsRes.data as any[]) || []).map((p: any) => ({
           id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined,
           iconUrls: p.icon_urls || [], bandaids: p.bandaids || [], problems: (p.problems as unknown as Problem[]) || [],
+          visualizations: (p.visualizations as any[]) || [],
         })),
       });
       setLoaded(true);
@@ -204,8 +206,8 @@ export function useAppStore() {
   // --- Main tasks (exclude custom section tasks) ---
   const mainTasks = data.tasks.filter(t => !t.customSectionId);
 
-  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt'> & { taskDate?: string; problems?: Problem[] }) => {
-    if (!user) return;
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt'> & { taskDate?: string; problems?: Problem[] }): Promise<string | undefined> => {
+    if (!user) return undefined;
     let utcReminderTime: string | null = null;
     if (task.reminderTime) {
       const [h, m] = task.reminderTime.split(':').map(Number);
@@ -235,7 +237,9 @@ export function useAppStore() {
         taskDate: raw.task_date || taskDate,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
+      return inserted.id;
     }
+    return undefined;
   }, [user]);
 
   const toggleTask = useCallback(async (id: string) => {
@@ -446,10 +450,11 @@ export function useAppStore() {
       user_id: user.id, title: preset.title, section_id: preset.sectionId,
       reminder_time: preset.reminderTime || null, icon_urls: preset.iconUrls || [],
       bandaids: preset.bandaids || [], problems: (preset.problems || []) as unknown as Json,
+      visualizations: (preset.visualizations || []) as unknown as Json,
     } as any).select().single();
     if (inserted) {
       const p = inserted as any;
-      setData(d => ({ ...d, presets: [...d.presets, { id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined, iconUrls: p.icon_urls || [], bandaids: p.bandaids || [], problems: (p.problems as unknown as Problem[]) || [] }] }));
+      setData(d => ({ ...d, presets: [...d.presets, { id: p.id, title: p.title, sectionId: p.section_id, reminderTime: p.reminder_time || undefined, iconUrls: p.icon_urls || [], bandaids: p.bandaids || [], problems: (p.problems as unknown as Problem[]) || [], visualizations: (p.visualizations as any[]) || [] }] }));
     }
   }, [user]);
 
