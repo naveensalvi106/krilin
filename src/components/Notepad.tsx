@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { StickyNote, X, Plus, FolderOpen, ImagePlus, Trash2 } from 'lucide-react';
+import { StickyNote, X, Plus, FolderOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import ConfirmDialog from './ConfirmDialog';
@@ -11,8 +11,26 @@ interface NoteSection {
   id: string;
   name: string;
   content: string;
-  images: string[];
 }
+
+const DEFAULT_SECTIONS = ['General', 'Diet', 'Fitness'];
+
+const SECTION_STYLES: Record<string, { active: React.CSSProperties }> = {
+  Diet: {
+    active: {
+      background: 'linear-gradient(135deg, hsl(140, 70%, 45%), hsl(160, 50%, 35%))',
+      color: 'white',
+      boxShadow: '0 0 10px hsla(140, 70%, 45%, 0.3)',
+    },
+  },
+  Fitness: {
+    active: {
+      background: 'linear-gradient(135deg, hsl(210, 10%, 70%), hsl(220, 8%, 50%))',
+      color: 'white',
+      boxShadow: '0 0 10px hsla(210, 10%, 60%, 0.3)',
+    },
+  },
+};
 
 const Notepad = () => {
   const { user } = useAuth();
@@ -21,10 +39,8 @@ const Notepad = () => {
   const [activeId, setActiveId] = useState('');
   const [newSectionName, setNewSectionName] = useState('');
   const [showAddSection, setShowAddSection] = useState(false);
-  const [viewImage, setViewImage] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
-  const [confirmRemove, setConfirmRemove] = useState<{ type: 'section' | 'image'; id?: string; index?: number } | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
@@ -32,17 +48,30 @@ const Notepad = () => {
     const load = async () => {
       const { data } = await supabase.from('notepad_sections').select('*').eq('user_id', user.id);
       if (data && data.length > 0) {
-        const mapped = data.map(s => ({ id: s.id, name: s.name, content: s.content, images: s.images || [] }));
+        // Migrate: rename "Health" to "Diet" if found
+        const mapped = data.map(s => ({
+          id: s.id,
+          name: s.name === 'Health' ? 'Diet' : s.name,
+          content: s.content,
+        }));
+        // Update name in DB if changed
+        for (const s of data) {
+          if (s.name === 'Health') {
+            supabase.from('notepad_sections').update({ name: 'Diet' }).eq('id', s.id).then();
+          }
+        }
         setSections(mapped);
         setActiveId(mapped[0].id);
       } else {
-        const { data: inserted } = await supabase.from('notepad_sections').insert({
-          user_id: user.id, name: 'General', content: '', images: [],
-        }).select().single();
+        // Create default sections
+        const rows = DEFAULT_SECTIONS.map(name => ({
+          user_id: user.id, name, content: '', images: [] as string[],
+        }));
+        const { data: inserted } = await supabase.from('notepad_sections').insert(rows).select();
         if (inserted) {
-          const sec = { id: inserted.id, name: inserted.name, content: inserted.content, images: inserted.images || [] };
-          setSections([sec]);
-          setActiveId(sec.id);
+          const mapped = inserted.map(s => ({ id: s.id, name: s.name, content: s.content }));
+          setSections(mapped);
+          setActiveId(mapped[0].id);
         }
       }
       setLoaded(true);
@@ -52,7 +81,7 @@ const Notepad = () => {
 
   const activeSection = sections.find(s => s.id === activeId);
 
-  const updateSectionInDb = useCallback((id: string, updates: Partial<{ content: string; images: string[] }>) => {
+  const updateSectionInDb = useCallback((id: string, updates: Partial<{ content: string }>) => {
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       supabase.from('notepad_sections').update(updates).eq('id', id).then();
@@ -68,10 +97,10 @@ const Notepad = () => {
   const addSection = async () => {
     if (!newSectionName.trim() || !user) return;
     const { data: inserted } = await supabase.from('notepad_sections').insert({
-      user_id: user.id, name: newSectionName.trim(), content: '', images: [],
+      user_id: user.id, name: newSectionName.trim(), content: '', images: [] as string[],
     }).select().single();
     if (inserted) {
-      const newSec = { id: inserted.id, name: inserted.name, content: inserted.content, images: inserted.images || [] };
+      const newSec = { id: inserted.id, name: inserted.name, content: inserted.content };
       setSections([...sections, newSec]);
       setActiveId(newSec.id);
       playAddTask();
@@ -89,40 +118,21 @@ const Notepad = () => {
     playDelete();
   };
 
-  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files) return;
-    Array.from(files).forEach(file => {
-      if (!file.type.startsWith('image/')) return;
-      const reader = new FileReader();
-      reader.onload = () => {
-        const dataUrl = reader.result as string;
-        setSections(prev => {
-          const updated = prev.map(s => s.id === activeId ? { ...s, images: [...s.images, dataUrl] } : s);
-          const sec = updated.find(s => s.id === activeId);
-          if (sec) updateSectionInDb(activeId, { images: sec.images });
-          return updated;
-        });
+  const getTabStyle = (section: NoteSection, isActive: boolean): React.CSSProperties => {
+    if (!isActive) {
+      return {
+        background: 'hsl(15, 10%, 10%)',
+        border: '1px solid hsl(15, 15%, 16%)',
+        color: 'hsl(25, 10%, 50%)',
       };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = '';
-  };
-
-  const removeImage = (index: number) => {
-    setSections(prev => {
-      const updated = prev.map(s => s.id === activeId ? { ...s, images: s.images.filter((_, i) => i !== index) } : s);
-      const sec = updated.find(s => s.id === activeId);
-      if (sec) updateSectionInDb(activeId, { images: sec.images });
-      return updated;
-    });
-  };
-
-  const handleConfirmRemove = () => {
-    if (!confirmRemove) return;
-    if (confirmRemove.type === 'section' && confirmRemove.id) removeSection(confirmRemove.id);
-    if (confirmRemove.type === 'image' && confirmRemove.index !== undefined) removeImage(confirmRemove.index);
-    setConfirmRemove(null);
+    }
+    const custom = SECTION_STYLES[section.name];
+    if (custom) return custom.active;
+    return {
+      background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))',
+      color: 'white',
+      boxShadow: '0 0 10px hsla(20, 90%, 52%, 0.3)',
+    };
   };
 
   const modal = open ? createPortal(
@@ -135,18 +145,11 @@ const Notepad = () => {
           style={{ background: 'hsl(15, 5%, 8%)' }}
           onClick={e => e.stopPropagation()}
         >
-          <input type="file" ref={fileRef} className="hidden" accept="image/*" multiple onChange={handleImageUpload} />
-
           <div className="flex items-center justify-between p-4 border-b border-border">
             <h3 className="font-display text-sm text-gradient-fire">Notepad</h3>
-            <div className="flex items-center gap-2">
-              <button onClick={() => fileRef.current?.click()} className="w-8 h-8 solid-circle hover:scale-110 transition-transform" title="Upload Image">
-                <ImagePlus className="w-4 h-4" />
-              </button>
-              <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+            <button onClick={() => setOpen(false)} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
+              <X className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="flex items-center gap-2 p-3 overflow-x-auto border-b border-border">
@@ -155,20 +158,12 @@ const Notepad = () => {
                 key={s.id}
                 onClick={() => setActiveId(s.id)}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 group"
-                style={activeId === s.id ? {
-                  background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))',
-                  color: 'white',
-                  boxShadow: '0 0 10px hsla(20, 90%, 52%, 0.3)',
-                } : {
-                  background: 'hsl(15, 10%, 10%)',
-                  border: '1px solid hsl(15, 15%, 16%)',
-                  color: 'hsl(25, 10%, 50%)',
-                }}
+                style={getTabStyle(s, activeId === s.id)}
               >
                 <FolderOpen className="w-3 h-3" />
                 {s.name}
                 {sections.length > 1 && (
-                  <button onClick={e => { e.stopPropagation(); setConfirmRemove({ type: 'section', id: s.id }); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
+                  <button onClick={e => { e.stopPropagation(); setConfirmRemove(s.id); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
                     <X className="w-3 h-3" />
                   </button>
                 )}
@@ -192,50 +187,24 @@ const Notepad = () => {
 
           <div className="flex-1 overflow-y-auto p-4">
             {activeSection && (
-              <>
-                <textarea
-                  value={activeSection.content}
-                  onChange={e => updateContent(e.target.value)}
-                  placeholder="Write your notes here..."
-                  className="w-full min-h-[200px] bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none resize-none text-sm leading-relaxed"
-                />
-                {activeSection.images.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mt-3">
-                    {activeSection.images.map((img, i) => (
-                      <div key={i} className="relative group">
-                        <img src={img} alt="Note" className="w-full h-24 object-cover rounded-lg cursor-pointer hover:scale-105 transition-transform" onClick={() => setViewImage(img)} />
-                        <button
-                          onClick={() => setConfirmRemove({ type: 'image', index: i })}
-                          className="absolute top-1 right-1 w-5 h-5 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                          style={{ background: 'hsl(0, 60%, 40%)' }}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </>
+              <textarea
+                value={activeSection.content}
+                onChange={e => updateContent(e.target.value)}
+                placeholder="Write your notes here..."
+                className="w-full min-h-[200px] h-full bg-transparent text-foreground placeholder:text-muted-foreground focus:outline-none resize-none text-sm leading-relaxed"
+              />
             )}
           </div>
 
           <ConfirmDialog
             open={!!confirmRemove}
-            onConfirm={handleConfirmRemove}
+            onConfirm={() => { if (confirmRemove) removeSection(confirmRemove); setConfirmRemove(null); }}
             onCancel={() => setConfirmRemove(null)}
-            title={confirmRemove?.type === 'section' ? 'Delete Section?' : 'Remove Image?'}
-            description={confirmRemove?.type === 'section' ? 'This will delete the section and all its notes.' : 'Are you sure you want to remove this image?'}
+            title="Delete Section?"
+            description="This will delete the section and all its notes."
           />
         </motion.div>
       </div>
-    </div>,
-    document.body
-  ) : null;
-
-  const imageViewer = viewImage ? createPortal(
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center" style={{ zIndex: 10000 }} onClick={() => setViewImage(null)}>
-      <button onClick={() => setViewImage(null)} className="absolute top-4 right-4 text-white"><X className="w-6 h-6" /></button>
-      <img src={viewImage} alt="Note" className="max-w-full max-h-full object-contain rounded-xl" />
     </div>,
     document.body
   ) : null;
@@ -246,7 +215,6 @@ const Notepad = () => {
         <StickyNote className="w-5 h-5" />
       </button>
       {modal}
-      {imageViewer}
     </>
   );
 };

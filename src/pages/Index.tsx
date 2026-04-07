@@ -16,6 +16,8 @@ import { playTab, playOpen, playClick, playDelete, playAddTask, playClose } from
 const RevivalProtocol = lazy(() => import('@/components/RevivalProtocol'));
 const Notepad = lazy(() => import('@/components/Notepad'));
 const CalendarWidget = lazy(() => import('@/components/CalendarWidget'));
+const MindMapWidget = lazy(() => import('@/components/MindMapWidget'));
+const TickListWidget = lazy(() => import('@/components/TickListWidget'));
 
 const Index = () => {
   const store = useAppStore();
@@ -193,6 +195,12 @@ const Index = () => {
                 <span className="absolute -bottom-0.5 text-[8px] font-bold text-white">{format(selectedDate, 'd')}</span>
               )}
             </button>
+            <Suspense fallback={null}>
+              <MindMapWidget />
+            </Suspense>
+            <Suspense fallback={null}>
+              <TickListWidget />
+            </Suspense>
             <Suspense fallback={null}>
               <Notepad />
             </Suspense>
