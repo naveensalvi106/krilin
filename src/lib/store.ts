@@ -206,8 +206,8 @@ export function useAppStore() {
   // --- Main tasks (exclude custom section tasks) ---
   const mainTasks = data.tasks.filter(t => !t.customSectionId);
 
-  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt'> & { taskDate?: string; problems?: Problem[] }) => {
-    if (!user) return;
+  const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt'> & { taskDate?: string; problems?: Problem[] }): Promise<string | undefined> => {
+    if (!user) return undefined;
     let utcReminderTime: string | null = null;
     if (task.reminderTime) {
       const [h, m] = task.reminderTime.split(':').map(Number);
@@ -237,7 +237,9 @@ export function useAppStore() {
         taskDate: raw.task_date || taskDate,
       };
       setData(d => ({ ...d, tasks: [...d.tasks, newTask] }));
+      return inserted.id;
     }
+    return undefined;
   }, [user]);
 
   const toggleTask = useCallback(async (id: string) => {
