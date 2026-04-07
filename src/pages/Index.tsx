@@ -107,10 +107,11 @@ const Index = () => {
   }, [taskStatsByDate]);
 
   const handleAddTask = (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[] }) => {
+    const taskWithProblems = { ...task, problems: task.problems || [], taskDate: selectedDateStr };
     if (activeTab) {
-      store.addTask({ ...task, customSectionId: activeTab, taskDate: selectedDateStr });
+      store.addTask({ ...taskWithProblems, customSectionId: activeTab });
     } else {
-      store.addTask({ ...task, taskDate: selectedDateStr });
+      store.addTask(taskWithProblems);
     }
   };
 
