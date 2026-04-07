@@ -22,7 +22,7 @@ interface TaskCardProps {
   isDragging?: boolean;
   dragHandleProps?: Record<string, any>;
   stickers?: { name: string; url: string }[];
-  onSavePreset?: (preset: { title: string; sectionId: string; reminderTime?: string; iconUrls: string[]; bandaids: string[] }) => void;
+  onSavePreset?: (preset: { title: string; sectionId: string; reminderTime?: string; iconUrls: string[]; bandaids: string[]; problems: { id: string; title: string; solution: string }[] }) => void;
 }
 
 const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onRemoveBandaid, onAddProblem, onRemoveProblem, visualizations, onAddVisualization, onRemoveVisualization, isDragging, dragHandleProps, stickers = [], onSavePreset }: TaskCardProps) => {
@@ -303,12 +303,13 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                     <button
                       type="button"
                       onClick={() => {
-                        onSavePreset({
+                      onSavePreset({
                           title: task.title,
                           sectionId: task.sectionId,
                           reminderTime: task.reminderTime,
                           iconUrls: task.iconUrls || [],
                           bandaids: task.bandaids || [],
+                          problems: task.problems || [],
                         });
                         playClick();
                       }}

@@ -11,7 +11,7 @@ interface AddTaskFormProps {
   sections: Section[];
   stickers: Sticker[];
   presets: TaskPreset[];
-  onAdd: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number }) => void;
+  onAdd: (task: { title: string; sectionId: string; bandaids: string[]; reminderTime?: string; iconUrls: string[]; sortOrder: number; problems?: { id: string; title: string; solution: string }[] }) => void;
   onDeletePreset: (id: string) => void;
 }
 
@@ -37,7 +37,9 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onAdd({ title: title.trim(), sectionId, bandaids: [], reminderTime: reminderTime || undefined, iconUrls: selectedIcons, sortOrder: 0 });
+    // Find if there's a loaded preset with problems
+    const matchingPreset = presets.find(p => p.title === title.trim() && p.sectionId === sectionId);
+    onAdd({ title: title.trim(), sectionId, bandaids: matchingPreset?.bandaids || [], reminderTime: reminderTime || undefined, iconUrls: selectedIcons, sortOrder: 0, problems: matchingPreset?.problems });
     playAddTask();
     setTitle('');
     setReminderTime('');
