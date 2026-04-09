@@ -107,20 +107,20 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
         <div
           className="relative rounded-xl px-3 py-3 pl-5"
           style={{
-            background: `linear-gradient(145deg, hsl(${hue} ${sat} 45%), hsl(${hue} ${sat} 35%), hsl(${hue} ${sat} 25%))`,
-            border: `1px solid hsl(${hue} ${sat} 55%)`,
-            borderTop: `1px solid hsl(${hue} ${sat} 60%)`,
-            borderBottom: `1px solid hsl(${hue} ${sat} 20%)`,
+            background: 'rgba(255, 255, 255, 0.07)',
+            backdropFilter: 'blur(40px) saturate(1.8)',
+            WebkitBackdropFilter: 'blur(40px) saturate(1.8)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             boxShadow: isDragging
-              ? `0 8px 32px hsl(${sectionColor} / 0.5), inset 0 1px 0 hsl(${hue} ${sat} 65%), inset 0 -1px 0 hsl(${hue} ${sat} 15%)`
-              : `0 4px 16px hsl(${sectionColor} / 0.3), 0 1px 3px hsl(0 0% 0% / 0.2), inset 0 1px 0 hsl(${hue} ${sat} 65%), inset 0 -1px 0 hsl(${hue} ${sat} 15%)`,
+              ? '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25), inset 0 -1px 0 rgba(0,0,0,0.15)'
+              : '0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2), inset 0 -1px 0 rgba(0,0,0,0.1)',
           }}
         >
           <div
             className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl"
             style={{
               background: `linear-gradient(180deg, hsl(${hue} ${sat} 70%), hsl(${hue} ${sat} 50%))`,
-              boxShadow: `2px 0 8px hsl(${sectionColor} / 0.4)`,
+              boxShadow: `2px 0 8px hsl(${hue} ${sat} 50% / 0.3)`,
             }}
           />
 
@@ -174,7 +174,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                 }
               }}
                 className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
-                style={{ background: editing ? 'linear-gradient(135deg, hsl(140, 70%, 45%), hsl(160, 60%, 35%))' : 'linear-gradient(135deg, hsl(200, 80%, 55%), hsl(220, 70%, 45%))', boxShadow: editing ? '0 0 6px hsla(140, 70%, 45%, 0.3)' : '0 0 6px hsla(200, 80%, 55%, 0.3)' }}
+                style={{ background: editing ? 'rgba(100,200,150,0.3)' : 'rgba(100,180,255,0.2)', border: '1px solid rgba(255,255,255,0.15)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)' }}
                 title={editing ? 'Done' : 'Edit'}
               >
                 {editing ? <Check className="w-3.5 h-3.5 text-white" /> : <Pencil className="w-3.5 h-3.5 text-white" />}
@@ -191,17 +191,17 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                     className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
                     title="Problems"
                     style={{
-                      background: 'linear-gradient(135deg, hsl(50, 100%, 55%), hsl(40, 90%, 45%))',
-                      boxShadow: '0 0 6px hsla(50, 100%, 55%, 0.3)',
+                      background: 'rgba(255,200,50,0.2)',
+                      border: '1px solid rgba(255,200,50,0.3)',
                     }}
                   >
-                    <AlertTriangle className="w-3.5 h-3.5 text-gray-800" />
+                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-300" />
                   </button>
                   <button onClick={() => setConfirmAction({ type: 'deleteTask' })}
                     className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 hover:scale-110"
                     style={{
-                      background: 'linear-gradient(135deg, hsl(0, 70%, 55%), hsl(0, 60%, 40%))',
-                      boxShadow: '0 0 6px hsla(0, 80%, 50%, 0.3)',
+                      background: 'rgba(220,60,60,0.25)',
+                      border: '1px solid rgba(220,60,60,0.35)',
                     }}
                   >
                     <X className="w-3.5 h-3.5 text-white" />

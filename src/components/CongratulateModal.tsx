@@ -61,9 +61,11 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
         className="relative mx-4 w-full rounded-2xl overflow-hidden"
         style={{
           maxWidth: hasImages ? '420px' : '380px',
-          background: 'linear-gradient(145deg, hsl(35 80% 22%), hsl(25 70% 15%))',
-          border: '1px solid hsl(40 80% 35%)',
-          boxShadow: '0 0 40px hsl(30 100% 50% / 0.15), 0 20px 60px rgba(0,0,0,0.5)',
+          background: 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(50px) saturate(2)',
+          WebkitBackdropFilter: 'blur(50px) saturate(2)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -75,10 +77,9 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
           className="absolute top-3 left-3 z-10 w-9 h-9 rounded-full flex items-center justify-center hover:scale-110 transition-transform"
           style={{
             background: editing
-              ? 'linear-gradient(135deg, hsl(40 100% 55%), hsl(25 100% 50%))'
-              : 'linear-gradient(135deg, hsl(40 90% 45%), hsl(30 85% 35%))',
-            border: '2px solid hsl(45 100% 65%)',
-            boxShadow: '0 0 12px hsl(40 100% 50% / 0.5)',
+              ? 'rgba(150,220,255,0.3)'
+              : 'rgba(255,255,255,0.12)',
+            border: '1px solid rgba(255,255,255,0.25)',
           }}
         >
           <Pencil className="w-4 h-4 text-white" />
@@ -115,8 +116,8 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
                     <div
                       className="rounded-xl px-4 py-3 flex items-center gap-2"
                       style={{
-                        background: 'linear-gradient(135deg, hsl(40 100% 50%), hsl(25 100% 48%))',
-                        boxShadow: '0 4px 15px hsl(30 100% 50% / 0.3)',
+                        background: 'rgba(255,255,255,0.12)',
+                        border: '1px solid rgba(255,255,255,0.15)',
                         marginTop: v.image ? '8px' : '0',
                       }}
                     >
