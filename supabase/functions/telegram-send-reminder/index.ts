@@ -27,8 +27,11 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     const now = new Date();
-    const currentTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
-    const today = now.toISOString().split('T')[0];
+    // Convert to IST (UTC+5:30) since reminder times are stored in local Indian time
+    const istOffset = 5.5 * 60 * 60 * 1000;
+    const istNow = new Date(now.getTime() + istOffset);
+    const currentTime = `${String(istNow.getUTCHours()).padStart(2, '0')}:${String(istNow.getUTCMinutes()).padStart(2, '0')}`;
+    const today = istNow.toISOString().split('T')[0];
 
     console.log('Checking telegram reminders for:', currentTime);
 

@@ -208,13 +208,8 @@ export function useAppStore() {
 
   const addTask = useCallback(async (task: Omit<Task, 'id' | 'completed' | 'createdAt'> & { taskDate?: string; problems?: Problem[] }): Promise<string | undefined> => {
     if (!user) return undefined;
-    let utcReminderTime: string | null = null;
-    if (task.reminderTime) {
-      const [h, m] = task.reminderTime.split(':').map(Number);
-      const now = new Date();
-      now.setHours(h, m, 0, 0);
-      utcReminderTime = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
-    }
+    // Store reminder time as-is (local time, no UTC conversion)
+    const reminderTimeToStore: string | null = task.reminderTime || null;
     const incompleteTasks = data.tasks.filter(t => !t.completed);
     const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
     const newSortOrder = maxSortOrder + 1;
@@ -222,7 +217,7 @@ export function useAppStore() {
     const problems = task.problems || [];
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
-      reminder_time: utcReminderTime, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
+      reminder_time: reminderTimeToStore, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
       problems: problems as unknown as Json, custom_section_id: task.customSectionId || null,
       sort_order: newSortOrder, task_date: taskDate,
     } as any).select().single();
@@ -270,14 +265,8 @@ export function useAppStore() {
       dbUpdates.icon_url = updates.iconUrls[0] || null;
     }
     if (updates.reminderTime !== undefined) {
-      if (updates.reminderTime) {
-        const [h, m] = updates.reminderTime.split(':').map(Number);
-        const now = new Date();
-        now.setHours(h, m, 0, 0);
-        dbUpdates.reminder_time = `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`;
-      } else {
-        dbUpdates.reminder_time = null;
-      }
+      // Store as-is (local time, no UTC conversion)
+      dbUpdates.reminder_time = updates.reminderTime || null;
     }
     await supabase.from('tasks').update(dbUpdates).eq('id', id);
     setData(d => ({
@@ -285,7 +274,7 @@ export function useAppStore() {
       tasks: d.tasks.map(t => t.id === id ? {
         ...t,
         ...updates,
-        ...(updates.reminderTime !== undefined ? { reminderTime: updates.reminderTime ? dbUpdates.reminder_time : undefined } : {}),
+        ...(updates.reminderTime !== undefined ? { reminderTime: updates.reminderTime || undefined } : {}),
       } : t),
     }));
   }, []);
