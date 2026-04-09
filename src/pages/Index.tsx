@@ -1,6 +1,6 @@
 import React, { useState, useRef, useMemo, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarDays as CalendarIcon, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, X } from 'lucide-react';
+import { Zap, CalendarDays as CalendarIcon, LogOut, User, Mail, CalendarDays, CheckCircle2, Plus, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { useAppStore } from '@/lib/store';
 import { useAuth } from '@/hooks/useAuth';
