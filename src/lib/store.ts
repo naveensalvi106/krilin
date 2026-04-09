@@ -210,9 +210,19 @@ export function useAppStore() {
     if (!user) return undefined;
     // Store reminder time as-is (local time, no UTC conversion)
     const reminderTimeToStore: string | null = task.reminderTime || null;
-    const incompleteTasks = data.tasks.filter(t => !t.completed);
-    const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
-    const newSortOrder = maxSortOrder + 1;
+    
+    // Auto-sort by reminder time: convert HH:mm to minutes for ordering
+    // Tasks without reminder go to the end
+    let newSortOrder: number;
+    if (reminderTimeToStore) {
+      const [hh, mm] = reminderTimeToStore.split(':').map(Number);
+      const timeMinutes = hh * 60 + mm; // e.g. 06:00 = 360, 08:00 = 480, 14:00 = 840
+      newSortOrder = timeMinutes;
+    } else {
+      const incompleteTasks = data.tasks.filter(t => !t.completed);
+      const maxSortOrder = incompleteTasks.length > 0 ? Math.max(...incompleteTasks.map(t => t.sortOrder)) : -1;
+      newSortOrder = Math.max(maxSortOrder + 1, 1440); // 1440 = after all timed tasks
+    }
     const taskDate = task.taskDate || new Date().toISOString().split('T')[0];
     const problems = task.problems || [];
     const { data: inserted, error } = await supabase.from('tasks').insert({
