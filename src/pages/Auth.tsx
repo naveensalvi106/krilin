@@ -94,9 +94,9 @@ const Auth = () => {
         className="glass-panel-accent bevel p-8 w-full max-w-sm space-y-6"
       >
         {/* Logo */}
-        <div className="text-center space-y-2">
-          <Flame className="w-10 h-10 mx-auto icon-glow text-primary" />
-          <h1 className="text-2xl font-display text-gradient-fire">EasyFlow</h1>
+        <div className="text-center space-y-3">
+          <img src="/logo.jpg" alt="Krilin" className="w-16 h-16 mx-auto rounded-2xl object-cover shadow-lg" style={{ boxShadow: '0 0 30px #FF6B3540' }} />
+          <h1 className="text-2xl font-display text-gradient-fire">Krilin</h1>
           <p className="text-sm text-muted-foreground">Your premium task system</p>
         </div>
 
