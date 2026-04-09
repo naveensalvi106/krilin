@@ -18,6 +18,7 @@ const Notepad = lazy(() => import('@/components/Notepad'));
 const CalendarWidget = lazy(() => import('@/components/CalendarWidget'));
 const MindMapWidget = lazy(() => import('@/components/MindMapWidget'));
 const TickListWidget = lazy(() => import('@/components/TickListWidget'));
+const TelegramLink = lazy(() => import('@/components/TelegramLink'));
 
 const Index = () => {
   const store = useAppStore();
