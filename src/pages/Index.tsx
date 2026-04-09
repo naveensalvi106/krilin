@@ -210,6 +210,9 @@ const Index = () => {
               <TickListWidget />
             </Suspense>
             <Suspense fallback={null}>
+              <TelegramLink />
+            </Suspense>
+            <Suspense fallback={null}>
               <Notepad />
             </Suspense>
           </div>
