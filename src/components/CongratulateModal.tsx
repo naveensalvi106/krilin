@@ -61,9 +61,11 @@ const CongratulateModal = ({ open, onClose, taskTitle, taskId, visualizations, o
         className="relative mx-4 w-full rounded-2xl overflow-hidden"
         style={{
           maxWidth: hasImages ? '420px' : '380px',
-          background: 'linear-gradient(145deg, hsl(35 80% 22%), hsl(25 70% 15%))',
-          border: '1px solid hsl(40 80% 35%)',
-          boxShadow: '0 0 40px hsl(30 100% 50% / 0.15), 0 20px 60px rgba(0,0,0,0.5)',
+          background: 'rgba(255,255,255,0.08)',
+          backdropFilter: 'blur(50px) saturate(2)',
+          WebkitBackdropFilter: 'blur(50px) saturate(2)',
+          border: '1px solid rgba(255,255,255,0.2)',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.25)',
         }}
         onClick={(e) => e.stopPropagation()}
       >
