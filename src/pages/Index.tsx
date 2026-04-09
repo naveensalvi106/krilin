@@ -140,8 +140,8 @@ const Index = () => {
       <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-border" style={{ background: 'hsla(15, 5%, 4%, 0.85)' }}>
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative">
-            <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Profile">
-              <Zap className="w-5 h-5" />
+            <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 rounded-full overflow-hidden hover:scale-110 transition-transform" title="Profile">
+              <img src="/logo.jpg" alt="Krilin" className="w-full h-full object-cover" />
             </button>
             <h1 className="text-lg font-display text-gradient-fire">Krilin</h1>
 
