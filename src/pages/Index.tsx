@@ -182,6 +182,7 @@ const Index = () => {
                   </div>
                   <div className="p-3 border-t border-border">
                     <StickerManager stickers={stickers} loading={stickersLoading} onUpload={uploadSticker} onDelete={deleteSticker} />
+                  </div>
                   <div className="p-3 border-t border-border">
                     <button onClick={signOut} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm hover:scale-[1.02] transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
                       <LogOut className="w-4 h-4" /> Sign out
