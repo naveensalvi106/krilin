@@ -62,9 +62,13 @@ const Auth = () => {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
         toast.success('Welcome back! 🔥');
+        if (data.session) {
+          window.location.replace('/');
+          return;
+        }
       } else {
         const { error } = await supabase.auth.signUp({
           email,
