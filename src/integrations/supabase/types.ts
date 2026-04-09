@@ -65,24 +65,30 @@ export type Database = {
       mind_map_nodes: {
         Row: {
           created_at: string
+          description: string | null
           id: string
           parent_id: string | null
+          section_id: string | null
           sort_order: number
           text: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          description?: string | null
           id?: string
           parent_id?: string | null
+          section_id?: string | null
           sort_order?: number
           text?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          description?: string | null
           id?: string
           parent_id?: string | null
+          section_id?: string | null
           sort_order?: number
           text?: string
           user_id?: string
