@@ -180,7 +180,8 @@ const Index = () => {
                       <TelegramLink />
                     </Suspense>
                   </div>
-                  <div className="p-3 border-t border-border">
+                  <div className="p-3 border-t border-border space-y-2">
+                    <p className="text-xs text-muted-foreground font-medium">Upload task icons</p>
                     <StickerManager stickers={stickers} loading={stickersLoading} onUpload={uploadSticker} onDelete={deleteSticker} />
                   </div>
                   <div className="p-3 border-t border-border">
