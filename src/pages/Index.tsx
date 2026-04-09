@@ -143,10 +143,7 @@ const Index = () => {
             <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 solid-circle hover:scale-110 transition-transform" title="Profile">
               <Zap className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2">
-              <img src="/logo.jpg" alt="Krilin" className="w-7 h-7 rounded-lg object-cover" />
-              <h1 className="text-lg font-display text-gradient-fire">Krilin</h1>
-            </div>
+            <h1 className="text-lg font-display text-gradient-fire">Krilin</h1>
 
             <AnimatePresence>
               {showProfile && (
