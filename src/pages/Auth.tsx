@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { lovable } from '@/integrations/lovable/index';
 import { toast } from 'sonner';
 
-const PUBLISHED_AUTH_URL = 'https://smooth-process-maker.lovable.app/auth?oauth=google';
+const PUBLISHED_AUTH_URL = 'https://krilin.lovable.app/auth?oauth=google';
 
 const Auth = () => {
   const [isLogin, setIsLogin] = useState(true);
