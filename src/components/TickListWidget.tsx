@@ -140,29 +140,44 @@ const TickListWidget = () => {
 
           {/* List tabs */}
           <div className="flex items-center gap-2 p-3 overflow-x-auto border-b border-border">
-            {lists.map(l => (
-              <button
-                key={l.id}
-                onClick={() => { setActiveListId(l.id); playClick(); }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0 group"
-                style={activeListId === l.id ? {
-                  background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))',
-                  color: 'white',
-                  boxShadow: '0 0 10px hsla(20, 90%, 52%, 0.3)',
-                } : {
-                  background: 'hsl(15, 10%, 10%)',
-                  border: '1px solid hsl(15, 15%, 16%)',
-                  color: 'hsl(25, 10%, 50%)',
-                }}
-              >
-                <FolderOpen className="w-3 h-3" />
-                {l.name}
-                {lists.length > 1 && (
-                  <button onClick={e => { e.stopPropagation(); setConfirmDelete({ type: 'list', id: l.id }); }} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1">
-                    <X className="w-3 h-3" />
-                  </button>
+            {lists.map((l, idx) => (
+              <div key={l.id} className="flex items-center gap-0.5 shrink-0">
+                <button
+                  onClick={() => { setActiveListId(l.id); playClick(); }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all"
+                  style={activeListId === l.id ? {
+                    background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))',
+                    color: 'white',
+                    boxShadow: '0 0 10px hsla(20, 90%, 52%, 0.3)',
+                  } : {
+                    background: 'hsl(15, 10%, 10%)',
+                    border: '1px solid hsl(15, 15%, 16%)',
+                    color: 'hsl(25, 10%, 50%)',
+                  }}
+                >
+                  <FolderOpen className="w-3 h-3" />
+                  {l.name}
+                </button>
+                {activeListId === l.id && (
+                  <div className="flex items-center gap-0.5 ml-0.5">
+                    {idx > 0 && (
+                      <button onClick={() => swapLists(idx, idx - 1)} className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10">
+                        <ChevronLeft className="w-3 h-3 text-white/50" />
+                      </button>
+                    )}
+                    {idx < lists.length - 1 && (
+                      <button onClick={() => swapLists(idx, idx + 1)} className="w-5 h-5 rounded flex items-center justify-center hover:bg-white/10">
+                        <ChevronRight className="w-3 h-3 text-white/50" />
+                      </button>
+                    )}
+                    {lists.length > 1 && (
+                      <button onClick={() => setConfirmDelete({ type: 'list', id: l.id })} className="w-5 h-5 rounded flex items-center justify-center hover:bg-red-500/20">
+                        <X className="w-3 h-3 text-red-400/70" />
+                      </button>
+                    )}
+                  </div>
                 )}
-              </button>
+              </div>
             ))}
             <button onClick={() => setShowAddList(!showAddList)} className="w-7 h-7 solid-circle shrink-0 hover:scale-110 transition-transform">
               <Plus className="w-3.5 h-3.5" />
