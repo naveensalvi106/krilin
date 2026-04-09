@@ -114,6 +114,15 @@ const TickListWidget = () => {
     playDelete();
   };
 
+  const swapLists = (fromIdx: number, toIdx: number) => {
+    setLists(prev => {
+      const next = [...prev];
+      [next[fromIdx], next[toIdx]] = [next[toIdx], next[fromIdx]];
+      return next;
+    });
+    playClick();
+  };
+
   const handleConfirm = () => {
     if (!confirmDelete) return;
     if (confirmDelete.type === 'list') deleteList(confirmDelete.id);
