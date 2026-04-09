@@ -135,9 +135,10 @@ const Index = () => {
   const memberSince = user?.created_at ? new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '';
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen relative">
+      <div className="app-bg" />
       {/* Header */}
-      <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-border" style={{ background: 'hsla(15, 5%, 4%, 0.85)' }}>
+      <div className="sticky top-0 z-40 border-b" style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(40px) saturate(1.8)', WebkitBackdropFilter: 'blur(40px) saturate(1.8)', borderColor: 'rgba(255,255,255,0.12)' }}>
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative">
             <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 rounded-full overflow-hidden hover:scale-110 transition-transform" title="Profile">
@@ -148,10 +149,10 @@ const Index = () => {
             <AnimatePresence>
               {showProfile && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute top-12 left-0 z-50 w-72 max-h-[70vh] overflow-y-auto rounded-2xl border border-border shadow-2xl" style={{ background: 'hsl(15, 5%, 8%)' }}>
-                  <div className="p-4 border-b border-border" style={{ background: 'hsl(15, 5%, 6%)' }}>
+                  className="absolute top-12 left-0 z-50 w-72 max-h-[70vh] overflow-y-auto rounded-2xl glass-panel-accent">
+                  <div className="p-4 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))' }}>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', backdropFilter: 'blur(10px)' }}>
                         <User className="w-5 h-5 text-white" />
                       </div>
                       <div className="flex-1 min-w-0">
@@ -167,7 +168,7 @@ const Index = () => {
                       { icon: CheckCircle2, label: 'Tasks completed', value: `${todayCompleted} / ${todayTotal}` },
                       { icon: Zap, label: "Today's progress", value: `${streakPercent}%` },
                     ].map(({ icon: Icon, label, value }) => (
-                      <div key={label} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: 'hsl(15, 10%, 10%)' }}>
+                      <div key={label} className="flex items-center gap-3 px-3 py-2 rounded-lg" style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <Icon className="w-4 h-4 text-muted-foreground shrink-0" />
                         <div className="min-w-0">
                           <p className="text-xs text-muted-foreground">{label}</p>
@@ -186,7 +187,7 @@ const Index = () => {
                     <StickerManager stickers={stickers} loading={stickersLoading} onUpload={uploadSticker} onDelete={deleteSticker} />
                   </div>
                   <div className="p-3 border-t border-border">
-                    <button onClick={signOut} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm hover:scale-[1.02] transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
+                    <button onClick={signOut} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm hover:scale-[1.02] transition-transform" style={{ background: 'rgba(220, 60, 60, 0.3)', border: '1px solid rgba(220, 60, 60, 0.4)' }}>
                       <LogOut className="w-4 h-4" /> Sign out
                     </button>
                   </div>
@@ -199,10 +200,6 @@ const Index = () => {
               onClick={() => { setShowCalendar(true); playOpen(); }}
               className="w-9 h-9 solid-circle hover:scale-110 transition-transform relative"
               title="Calendar"
-              style={!isViewingToday ? {
-                background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(15, 90%, 45%))',
-                boxShadow: '0 0 10px hsl(25, 100%, 50% / 0.4)',
-              } : undefined}
             >
               <CalendarIcon className="w-5 h-5" />
               {!isViewingToday && (
@@ -224,27 +221,20 @@ const Index = () => {
 
       {showProfile && <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />}
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)]">
+      <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)] relative z-10">
         {/* Date indicator when not viewing today */}
         {!isViewingToday && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex items-center justify-between rounded-xl px-4 py-2"
-            style={{
-              background: 'linear-gradient(135deg, hsl(20, 30%, 12%), hsl(15, 20%, 8%))',
-              border: '1px solid hsl(20, 60%, 30%)',
-            }}
+            className="flex items-center justify-between rounded-xl px-4 py-2 glass-panel"
           >
             <span className="text-sm font-display text-gradient-fire">
               {format(selectedDate, 'EEEE, MMMM d, yyyy')}
             </span>
             <button
               onClick={() => { setSelectedDate(new Date()); playTab(); }}
-              className="text-xs px-3 py-1 rounded-full font-medium text-primary-foreground"
-              style={{
-                background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(15, 90%, 45%))',
-              }}
+              className="text-xs px-3 py-1 rounded-full font-medium text-white btn-premium"
             >
               Today
             </button>
@@ -318,8 +308,8 @@ const Index = () => {
                 onClick={() => { setShowAddSection(true); playOpen(); }}
                 className="w-5 h-5 rounded-md flex items-center justify-center shrink-0 hover:scale-110 transition-transform ml-1"
                 style={{
-                  background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(25, 100%, 50%))',
-                  boxShadow: '0 0 8px hsl(35 100% 50% / 0.3)',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.25)',
                 }}
                 title="Add Section"
               >
