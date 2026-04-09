@@ -351,6 +351,72 @@ export type Database = {
           },
         ]
       }
+      telegram_bot_state: {
+        Row: {
+          id: number
+          update_offset: number
+          updated_at: string
+        }
+        Insert: {
+          id: number
+          update_offset?: number
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          update_offset?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telegram_messages: {
+        Row: {
+          chat_id: number
+          created_at: string
+          raw_update: Json
+          text: string | null
+          update_id: number
+        }
+        Insert: {
+          chat_id: number
+          created_at?: string
+          raw_update: Json
+          text?: string | null
+          update_id: number
+        }
+        Update: {
+          chat_id?: number
+          created_at?: string
+          raw_update?: Json
+          text?: string | null
+          update_id?: number
+        }
+        Relationships: []
+      }
+      telegram_user_links: {
+        Row: {
+          chat_id: number
+          id: string
+          linked_at: string
+          user_id: string
+          username: string | null
+        }
+        Insert: {
+          chat_id: number
+          id?: string
+          linked_at?: string
+          user_id: string
+          username?: string | null
+        }
+        Update: {
+          chat_id?: number
+          id?: string
+          linked_at?: string
+          user_id?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
       tick_list_items: {
         Row: {
           completed: boolean
