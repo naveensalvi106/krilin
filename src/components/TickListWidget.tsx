@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ListChecks, X, Plus, Check, Trash2, FolderOpen } from 'lucide-react';
+import { ListChecks, X, Plus, Check, Trash2, FolderOpen, GripVertical, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import ConfirmDialog from './ConfirmDialog';
