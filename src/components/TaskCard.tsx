@@ -153,11 +153,9 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
 
             {task.reminderTime && !editing && (() => {
               const [h, m] = task.reminderTime.split(':').map(Number);
-              const d = new Date();
-              d.setUTCHours(h, m, 0, 0);
-              const hour12 = d.getHours() % 12 || 12;
-              const ampm = d.getHours() >= 12 ? 'PM' : 'AM';
-              const displayTime = `${hour12}:${String(d.getMinutes()).padStart(2, '0')} ${ampm}`;
+              const hour12 = h % 12 || 12;
+              const ampm = h >= 12 ? 'PM' : 'AM';
+              const displayTime = `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
               return (
                 <span className="flex items-center gap-0.5 text-[10px] text-white/60 shrink-0">
                   <Clock className="w-2.5 h-2.5" />
