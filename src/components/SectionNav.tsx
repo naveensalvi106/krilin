@@ -18,13 +18,14 @@ const SectionNav = ({ sections, activeSection, onSelect, taskCounts }: SectionNa
         onClick={() => onSelect(null)}
         className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all shrink-0"
         style={activeSection === null ? {
-          background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))',
+          background: 'rgba(255, 255, 255, 0.15)',
           color: 'white',
-          boxShadow: '0 0 14px hsla(20, 90%, 52%, 0.35), inset 0 1px 0 hsla(35, 100%, 70%, 0.2)',
+          border: '1px solid rgba(255,255,255,0.25)',
+          boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
         } : {
-          background: 'linear-gradient(135deg, hsl(15, 15%, 10%), hsl(10, 10%, 8%))',
-          border: '1px solid hsl(15, 20%, 16%)',
-          color: 'hsl(25, 10%, 50%)',
+          background: 'rgba(255,255,255,0.04)',
+          border: '1px solid rgba(255,255,255,0.08)',
+          color: 'rgba(255,255,255,0.5)',
         }}
       >
         <LayoutGrid className="w-4 h-4" />
@@ -41,13 +42,13 @@ const SectionNav = ({ sections, activeSection, onSelect, taskCounts }: SectionNa
             onClick={() => onSelect(s.id)}
             className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all shrink-0"
             style={isActive ? {
-              background: `linear-gradient(135deg, hsl(${s.color}), hsl(${s.color.split(' ')[0]} 60% 35%))`,
+              background: 'rgba(255, 255, 255, 0.15)',
               color: 'white',
-              boxShadow: `0 0 14px hsla(${s.color}, 0.35), inset 0 1px 0 hsla(${s.color.split(' ')[0]}, 100%, 70%, 0.2)`,
+              border: '1px solid rgba(255,255,255,0.25)',
             } : {
-              background: 'linear-gradient(135deg, hsl(15, 15%, 10%), hsl(10, 10%, 8%))',
-              border: '1px solid hsl(15, 20%, 16%)',
-              color: 'hsl(25, 10%, 50%)',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: 'rgba(255,255,255,0.5)',
             }}
           >
             <Icon className="w-4 h-4" />
