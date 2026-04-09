@@ -49,7 +49,7 @@ const MindMapWidget = () => {
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 });
   const canvasRef = useRef<HTMLDivElement>(null);
 
-  const sections = store.data.sections;
+  const sections = store.sections;
 
   useEffect(() => {
     if (!user || !open) return;
