@@ -13,7 +13,10 @@ Deno.serve(async () => {
   }
 
   const supabase = createClient(supabaseUrl, serviceRoleKey);
-  const today = new Date().toISOString().split('T')[0];
+  // Use IST date for today
+  const istOffset = 5.5 * 60 * 60 * 1000;
+  const istNow = new Date(Date.now() + istOffset);
+  const today = istNow.toISOString().split('T')[0];
 
   // Get all linked users
   const { data: links } = await supabase.from('telegram_user_links').select('user_id, chat_id');
