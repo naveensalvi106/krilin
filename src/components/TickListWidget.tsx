@@ -255,7 +255,7 @@ const TickListWidget = () => {
                 <span className={`flex-1 text-sm ${item.completed ? 'line-through text-muted-foreground' : 'text-foreground'}`}>{item.text}</span>
                 <button
                   onClick={() => setConfirmDelete({ type: 'item', id: item.id })}
-                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="opacity-60 hover:opacity-100 transition-opacity shrink-0"
                 >
                   <Trash2 className="w-3.5 h-3.5 text-muted-foreground hover:text-red-400" />
                 </button>
