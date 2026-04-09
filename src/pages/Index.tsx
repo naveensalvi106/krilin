@@ -143,11 +143,12 @@ const Index = () => {
             <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 rounded-full overflow-hidden hover:scale-110 transition-transform" title="Profile">
               <img src="/logo.jpg" alt="Krilin" className="w-full h-full object-cover" />
             </button>
+            <h1 className="text-lg font-display text-gradient-fire">Krilin</h1>
 
             <AnimatePresence>
               {showProfile && (
                 <motion.div initial={{ opacity: 0, y: -10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                  className="absolute top-12 left-0 z-50 w-72 rounded-2xl border border-border shadow-2xl overflow-hidden" style={{ background: 'hsl(15, 5%, 8%)' }}>
+                  className="absolute top-12 left-0 z-50 w-72 max-h-[70vh] overflow-y-auto rounded-2xl border border-border shadow-2xl" style={{ background: 'hsl(15, 5%, 8%)' }}>
                   <div className="p-4 border-b border-border" style={{ background: 'hsl(15, 5%, 6%)' }}>
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(5, 85%, 48%))' }}>
