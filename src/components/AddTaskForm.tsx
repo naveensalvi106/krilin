@@ -112,13 +112,14 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
               onClick={() => setSectionId(s.id)}
               className="text-xs px-3 py-1.5 rounded-full transition-all"
               style={sectionId === s.id ? {
-                background: `linear-gradient(135deg, hsl(${s.color}), hsl(${s.color.split(' ')[0]} 60% 35%))`,
+                background: 'rgba(255,255,255,0.15)',
                 color: 'white',
-                boxShadow: `0 0 12px hsl(${s.color} / 0.3)`,
+                border: '1px solid rgba(255,255,255,0.3)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
               } : {
-                background: 'hsl(15, 10%, 12%)',
-                border: '1px solid hsl(15, 20%, 18%)',
-                color: 'hsl(25, 10%, 50%)',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: 'rgba(255,255,255,0.5)',
               }}
             >
               {s.name}
@@ -132,12 +133,11 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
             onClick={() => setShowTimePicker(true)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02]"
             style={reminderTime ? {
-              background: 'linear-gradient(135deg, hsl(20, 60%, 14%), hsl(10, 40%, 10%))',
-              border: '1px solid hsl(20, 50%, 25%)',
-              boxShadow: '0 0 12px hsl(20, 90%, 52% / 0.12)',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.18)',
             } : {
-              background: 'hsl(15, 10%, 10%)',
-              border: '1px solid hsl(15, 15%, 16%)',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
             <AlarmClock className="w-4 h-4 icon-glow" />
@@ -149,12 +149,11 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
             onClick={() => setShowIconPicker(!showIconPicker)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02]"
             style={selectedIcons.length > 0 ? {
-              background: 'linear-gradient(135deg, hsl(280, 60%, 14%), hsl(260, 40%, 10%))',
-              border: '1px solid hsl(280, 50%, 25%)',
-              boxShadow: '0 0 12px hsl(280, 90%, 52% / 0.12)',
+              background: 'rgba(255,255,255,0.08)',
+              border: '1px solid rgba(255,255,255,0.18)',
             } : {
-              background: 'hsl(15, 10%, 10%)',
-              border: '1px solid hsl(15, 15%, 16%)',
+              background: 'rgba(255,255,255,0.04)',
+              border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
             <Image className="w-4 h-4 icon-glow" />
@@ -167,9 +166,8 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
               onClick={() => { setShowPresets(!showPresets); setSelectedPresetIds([]); showPresets ? playClose() : playOpen(); }}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all hover:scale-[1.02]"
               style={{
-                background: 'linear-gradient(135deg, hsl(45, 60%, 14%), hsl(30, 40%, 10%))',
-                border: '1px solid hsl(45, 50%, 25%)',
-                boxShadow: '0 0 12px hsl(45, 90%, 52% / 0.12)',
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.18)',
               }}
             >
               <Bookmark className="w-4 h-4 icon-glow" />
@@ -180,7 +178,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
 
         {/* Presets picker with multi-select */}
         {showPresets && presets.length > 0 && (
-          <div className="rounded-xl p-3 border border-border space-y-2" style={{ background: 'hsl(15, 10%, 8%)' }}>
+          <div className="rounded-xl p-3 border space-y-2 glass-panel" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
             <div className="flex items-center justify-between">
               <p className="text-xs text-muted-foreground font-medium">📋 Select presets to add</p>
               {selectedPresetIds.length > 0 && (
@@ -196,16 +194,15 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
                 return (
                   <div key={p.id} className="flex items-center gap-2 rounded-lg px-3 py-2 cursor-pointer hover:scale-[1.01] transition-all"
                     style={{
-                      background: isSelected ? 'hsl(45, 40%, 12%)' : 'hsl(15, 10%, 12%)',
-                      border: isSelected ? '1px solid hsl(45, 60%, 35%)' : '1px solid hsl(15, 20%, 18%)',
-                      boxShadow: isSelected ? '0 0 8px hsl(45, 80%, 50% / 0.15)' : 'none',
+                      background: isSelected ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.04)',
+                      border: isSelected ? '1px solid rgba(255,255,255,0.25)' : '1px solid rgba(255,255,255,0.08)',
                     }}
                   >
                     <button type="button" onClick={() => togglePresetSelection(p.id)}
                       className="w-5 h-5 rounded flex items-center justify-center shrink-0 transition-all"
                       style={{
-                        background: isSelected ? 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 90%, 45%))' : 'hsl(15, 10%, 18%)',
-                        border: isSelected ? 'none' : '1px solid hsl(15, 20%, 25%)',
+                        background: isSelected ? 'rgba(150,220,255,0.3)' : 'rgba(255,255,255,0.06)',
+                        border: isSelected ? 'none' : '1px solid rgba(255,255,255,0.1)',
                       }}
                     >
                       {isSelected && <Check className="w-3 h-3 text-white" />}
@@ -240,9 +237,9 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
                 onClick={handleAddSelectedPresets}
                 className="w-full py-2.5 rounded-xl text-sm font-medium transition-all hover:scale-[1.01]"
                 style={{
-                  background: 'linear-gradient(135deg, hsl(45, 100%, 55%), hsl(30, 90%, 45%))',
-                  color: 'hsl(15, 10%, 8%)',
-                  boxShadow: '0 0 16px hsl(45, 100%, 55% / 0.3)',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '1px solid rgba(255,255,255,0.25)',
+                  color: 'white',
                 }}
               >
                 Add {selectedPresetIds.length} Preset{selectedPresetIds.length > 1 ? 's' : ''} as Task{selectedPresetIds.length > 1 ? 's' : ''}
@@ -252,7 +249,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
         )}
 
         {showIconPicker && (
-          <div className="rounded-xl p-3 border border-border" style={{ background: 'hsl(15, 10%, 8%)' }}>
+          <div className="rounded-xl p-3 glass-panel">
             {stickers.length === 0 ? (
               <p className="text-xs text-muted-foreground text-center py-2">No stickers yet! Upload some from your profile.</p>
             ) : (
@@ -261,7 +258,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
                   type="button"
                   onClick={() => { setSelectedIcons([]); setShowIconPicker(false); }}
                   className={`w-9 h-9 rounded-lg flex items-center justify-center text-xs border transition-all ${selectedIcons.length === 0 ? 'border-primary' : 'border-border'}`}
-                  style={{ background: 'hsl(15, 10%, 12%)' }}
+                  style={{ background: 'rgba(255,255,255,0.06)' }}
                 >
                   None
                 </button>
@@ -271,7 +268,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
                     type="button"
                     onClick={() => toggleIcon(s.url)}
                     className={`w-9 h-9 rounded-lg p-1 border transition-all ${selectedIcons.includes(s.url) ? 'border-primary scale-110' : 'border-border'}`}
-                    style={{ background: 'hsl(15, 10%, 12%)' }}
+                    style={{ background: 'rgba(255,255,255,0.06)' }}
                   >
                     <img src={s.url} alt="" className="w-full h-full object-contain" />
                   </button>
@@ -282,7 +279,7 @@ const AddTaskForm = ({ sections, stickers, presets, onAdd, onDeletePreset }: Add
         )}
 
         <div className="flex gap-3 justify-end">
-          <button type="button" onClick={() => { setExpanded(false); playClose(); }} className="px-4 py-2 text-sm rounded-xl text-muted-foreground hover:text-foreground transition-colors" style={{ background: 'hsl(15, 10%, 10%)', border: '1px solid hsl(15, 15%, 16%)' }}>
+          <button type="button" onClick={() => { setExpanded(false); playClose(); }} className="px-4 py-2 text-sm rounded-xl text-muted-foreground hover:text-foreground transition-colors" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
             Cancel
           </button>
           <button type="submit" className="btn-premium text-primary-foreground px-6 py-2 text-sm">Add Task</button>
