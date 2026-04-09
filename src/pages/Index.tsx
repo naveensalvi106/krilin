@@ -18,6 +18,7 @@ const Notepad = lazy(() => import('@/components/Notepad'));
 const CalendarWidget = lazy(() => import('@/components/CalendarWidget'));
 const MindMapWidget = lazy(() => import('@/components/MindMapWidget'));
 const TickListWidget = lazy(() => import('@/components/TickListWidget'));
+const TelegramLink = lazy(() => import('@/components/TelegramLink'));
 
 const Index = () => {
   const store = useAppStore();
@@ -207,6 +208,9 @@ const Index = () => {
             </Suspense>
             <Suspense fallback={null}>
               <TickListWidget />
+            </Suspense>
+            <Suspense fallback={null}>
+              <TelegramLink />
             </Suspense>
             <Suspense fallback={null}>
               <Notepad />
