@@ -35,32 +35,12 @@ const TelegramLink = () => {
     setLoading(true);
     setError('');
 
-    // Find the link code in telegram_messages
-    const { data: msgs } = await supabase
-      .from('telegram_messages' as any)
-      .select('*')
-      .like('text', `LINK_CODE:${linkCode.trim()}`);
+    const { data, error: invokeError } = await supabase.functions.invoke('telegram-link', {
+      body: { code: linkCode.trim() },
+    });
 
-    if (!msgs || msgs.length === 0) {
-      setError('Invalid code. Send /start to the bot first.');
-      setLoading(false);
-      return;
-    }
-
-    const msg = (msgs as any[])[0];
-    const chatId = msg.raw_update?.chat_id || msg.chat_id;
-    const username = msg.raw_update?.username || '';
-
-    const { error: insertErr } = await supabase
-      .from('telegram_user_links' as any)
-      .insert({ user_id: user.id, chat_id: chatId, username } as any);
-
-    if (insertErr) {
-      if (insertErr.message.includes('duplicate')) {
-        setError('This Telegram account is already linked.');
-      } else {
-        setError('Failed to link. Try again.');
-      }
+    if (invokeError || data?.error) {
+      setError(data?.error || invokeError?.message || 'Failed to link. Try again.');
       setLoading(false);
       return;
     }
