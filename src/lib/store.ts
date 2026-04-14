@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Json } from "@/integrations/supabase/types";
-import { Capacitor } from "@getcapacitor/core";
+import { Capacitor } from "@capacitor/core";
 
 // Helper to update native home screen widget
 const updateNativeWidget = (count: number) => {
