@@ -17,6 +17,7 @@ export interface Task {
   bandaids: string[];
   problems: Problem[];
   reminderTime?: string;
+  notificationMessage?: string;
   iconUrls: string[];
   createdAt: string;
   sortOrder: number;
@@ -149,7 +150,8 @@ export function useAppStore() {
           return {
             id: t.id, title: t.title, sectionId: t.section_id, completed: t.completed,
             bandaids: t.bandaids || [], problems: (t.problems as unknown as Problem[]) || [],
-            reminderTime: t.reminder_time || undefined, iconUrls, createdAt: t.created_at,
+            reminderTime: t.reminder_time || undefined, notificationMessage: raw.notification_message || undefined,
+            iconUrls, createdAt: t.created_at,
             sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
             taskDate: raw.task_date || new Date().toISOString().split('T')[0],
           };
@@ -227,7 +229,8 @@ export function useAppStore() {
     const problems = task.problems || [];
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
-      reminder_time: reminderTimeToStore, icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
+      reminder_time: reminderTimeToStore, notification_message: task.notificationMessage || null,
+      icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
       problems: problems as unknown as Json, custom_section_id: task.customSectionId || null,
       sort_order: newSortOrder, task_date: taskDate,
     } as any).select().single();
@@ -236,7 +239,7 @@ export function useAppStore() {
       const newTask: Task = {
         id: inserted.id, title: inserted.title, sectionId: inserted.section_id, completed: inserted.completed,
         bandaids: inserted.bandaids || [], problems: (inserted.problems as unknown as Problem[]) || [],
-        reminderTime: inserted.reminder_time || undefined,
+        reminderTime: inserted.reminder_time || undefined, notificationMessage: raw.notification_message || undefined,
         iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []), createdAt: inserted.created_at,
         sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
         taskDate: raw.task_date || taskDate,
@@ -267,7 +270,7 @@ export function useAppStore() {
     setData(d => ({ ...d, tasks: d.tasks.filter(t => t.id !== id) }));
   }, []);
 
-  const editTask = useCallback(async (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null }) => {
+  const editTask = useCallback(async (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null; notificationMessage?: string | null }) => {
     const dbUpdates: any = {};
     if (updates.title !== undefined) dbUpdates.title = updates.title;
     if (updates.iconUrls !== undefined) {
@@ -278,6 +281,9 @@ export function useAppStore() {
       // Store as-is (local time, no UTC conversion)
       dbUpdates.reminder_time = updates.reminderTime || null;
     }
+    if (updates.notificationMessage !== undefined) {
+      dbUpdates.notification_message = updates.notificationMessage || null;
+    }
     await supabase.from('tasks').update(dbUpdates).eq('id', id);
     setData(d => ({
       ...d,
@@ -285,6 +291,7 @@ export function useAppStore() {
         ...t,
         ...updates,
         ...(updates.reminderTime !== undefined ? { reminderTime: updates.reminderTime || undefined } : {}),
+        ...(updates.notificationMessage !== undefined ? { notificationMessage: updates.notificationMessage || undefined } : {}),
       } : t),
     }));
   }, []);

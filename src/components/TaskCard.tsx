@@ -11,7 +11,7 @@ interface TaskCardProps {
   section?: Section;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onEdit: (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null }) => void;
+  onEdit: (id: string, updates: { title?: string; iconUrls?: string[]; reminderTime?: string | null; notificationMessage?: string | null }) => void;
   onAddBandaid: (taskId: string, bandaid: string) => void;
   onRemoveBandaid: (taskId: string, index: number) => void;
   onAddProblem: (taskId: string, title: string, solution: string) => void;
@@ -38,6 +38,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
   const [showIconPicker, setShowIconPicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [editTime, setEditTime] = useState(task.reminderTime || '');
+  const [editNotifMsg, setEditNotifMsg] = useState(task.notificationMessage || '');
 
   // Confirm dialog state
   const [confirmAction, setConfirmAction] = useState<{ type: string; payload?: any } | null>(null);
@@ -169,7 +170,7 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                 if (editing) {
                   handleSaveEdit();
                 } else {
-                  setEditing(true); setEditTitle(task.title); setEditTime(task.reminderTime || ''); setShowIconPicker(false); playOpen();
+                  setEditing(true); setEditTitle(task.title); setEditTime(task.reminderTime || ''); setEditNotifMsg(task.notificationMessage || ''); setShowIconPicker(false); playOpen();
                   setShowBandaids(false); setShowProblems(false);
                 }
               }}
@@ -246,6 +247,37 @@ const TaskCard = ({ task, section, onToggle, onDelete, onEdit, onAddBandaid, onR
                       <button
                         onClick={() => { setEditTime(''); onEdit(task.id, { reminderTime: null }); }}
                         className="text-[10px] px-2 py-1 rounded-full text-white/60 hover:text-white transition-colors"
+                        style={{ background: 'hsla(0,70%,50%,0.3)' }}
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Notification Message */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        style={{ background: 'hsla(0,0%,100%,0.15)' }}>
+                        <span className="text-sm">🔔</span>
+                      </div>
+                      <span className="text-xs text-white/70">Notification Message</span>
+                    </div>
+                    <textarea
+                      value={editNotifMsg}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setEditNotifMsg(val);
+                        onEdit(task.id, { notificationMessage: val || null });
+                      }}
+                      placeholder="What should the notification say? (e.g. 'Don't forget to drink water!')..."
+                      rows={2}
+                      className="w-full bg-white/10 border border-white/20 rounded-xl px-3 py-2 text-sm text-white placeholder:text-white/40 focus:outline-none focus:border-white/40 resize-none ml-9"
+                    />
+                    {editNotifMsg && (
+                      <button
+                        onClick={() => { setEditNotifMsg(''); onEdit(task.id, { notificationMessage: null }); }}
+                        className="text-[10px] px-2 py-1 rounded-full text-white/60 hover:text-white transition-colors ml-9"
                         style={{ background: 'hsla(0,70%,50%,0.3)' }}
                       >
                         Clear

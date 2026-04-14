@@ -137,7 +137,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-border" style={{ background: 'hsla(15, 5%, 4%, 0.85)' }}>
+      <div className="sticky top-0 z-40 backdrop-blur-xl border-b border-border capacitor-status-bar-padding" style={{ background: 'hsla(15, 5%, 4%, 0.85)', paddingTop: 'max(env(safe-area-inset-top, 0px), var(--status-bar-height, 0px))' }}>
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative">
             <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 rounded-full overflow-hidden hover:scale-110 transition-transform" title="Profile">

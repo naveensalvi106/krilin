@@ -1,8 +1,18 @@
 import { createRoot } from "react-dom/client";
 import { App as CapApp } from '@capacitor/app';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { Capacitor } from '@capacitor/core';
 import { supabase } from "@/integrations/supabase/client";
 import App from "./App.tsx";
 import "./index.css";
+
+// Configure status bar for Android
+if (Capacitor.isNativePlatform()) {
+  StatusBar.setOverlaysWebView({ overlay: true }).catch(() => {});
+  StatusBar.setStyle({ style: Style.Dark }).catch(() => {});
+  StatusBar.setBackgroundColor({ color: '#00000000' }).catch(() => {});
+  document.body.classList.add('capacitor-android');
+}
 
 // Handle Deep Links for Google Login
 CapApp.addListener('appUrlOpen', async (data) => {

@@ -203,3 +203,19 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsla(20, 90%, 52%, 0.5);
 }
+
+/* Mobile status bar safe area */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+/* Capacitor Android status bar overlay fallback */
+body.capacitor-android {
+  --status-bar-height: 28px;
+}
+
+.capacitor-status-bar-padding {
+  padding-top: var(--status-bar-height, 0px);
+}

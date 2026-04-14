@@ -42,7 +42,7 @@ export function useTaskReminders(tasks: Task[]) {
 
         notificationsToSchedule.push({
           title: '⏰ Easy Flow Reminder',
-          body: `Time for: ${task.title}`,
+          body: task.notificationMessage || `Time for: ${task.title}`,
           id: Math.abs(task.id.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0)), // Generate numeric ID from task GUID
           schedule: { at: scheduledTime },
           sound: 'alarm_sound.wav', // We can configure custom sound later if needed
