@@ -220,23 +220,23 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
-            className="w-full max-w-lg mx-4 rounded-2xl overflow-hidden shadow-2xl flex flex-col"
-            style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(50px) saturate(2)', WebkitBackdropFilter: 'blur(50px) saturate(2)', border: '1px solid rgba(255,255,255,0.15)', maxHeight: '80vh' }}
+            className="w-full max-w-lg mx-4 rounded-2xl border border-border overflow-hidden shadow-2xl flex flex-col"
+            style={{ background: 'hsl(15, 5%, 8%)', maxHeight: '80vh' }}
             onClick={e => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+            <div className="flex items-center justify-between px-4 py-3 border-b border-border" style={{ background: 'hsl(15, 5%, 6%)' }}>
               <div className="flex items-center gap-2">
                 <Bot className="w-4 h-4 text-primary" />
                 <span className="font-display text-sm text-gradient-fire">Krilin AI</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {messages.length > 0 && (
-                  <button onClick={() => { setConfirmClear(true); playWarning(); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'rgba(255,255,255,0.08)' }} title="Clear chat">
+                  <button onClick={() => { setConfirmClear(true); playWarning(); }} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(15, 10%, 14%)' }} title="Clear chat">
                     <Trash2 className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 )}
-                <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'rgba(220,60,60,0.3)' }}>
+                <button onClick={onClose} className="w-7 h-7 rounded-full flex items-center justify-center hover:scale-110 transition-transform" style={{ background: 'hsl(0, 60%, 40%)' }}>
                   <X className="w-4 h-4" />
                 </button>
               </div>
@@ -253,7 +253,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
                         key={q.label}
                         onClick={() => { setInput(q.msg); }}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs border border-border hover:border-primary/50 transition-colors"
-                        style={{ background: 'rgba(255,255,255,0.06)' }}
+                        style={{ background: 'hsl(15, 10%, 12%)' }}
                       >
                         {q.icon} {q.label}
                       </button>
@@ -269,7 +269,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
                         ? 'bg-primary text-primary-foreground rounded-br-md'
                         : 'rounded-bl-md'
                     }`}
-                    style={m.role === 'assistant' ? { background: 'rgba(255,255,255,0.06)' } : undefined}
+                    style={m.role === 'assistant' ? { background: 'hsl(15, 10%, 14%)' } : undefined}
                   >
                     {m.role === 'assistant' ? (
                       <div className="prose prose-sm prose-invert max-w-none [&>p]:m-0">
@@ -281,7 +281,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
               ))}
               {loading && (
                 <div className="flex justify-start">
-                  <div className="rounded-2xl rounded-bl-md px-3 py-2 text-sm" style={{ background: 'rgba(255,255,255,0.06)' }}>
+                  <div className="rounded-2xl rounded-bl-md px-3 py-2 text-sm" style={{ background: 'hsl(15, 10%, 14%)' }}>
                     <span className="animate-pulse">Thinking...</span>
                   </div>
                 </div>
@@ -290,7 +290,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             </div>
 
             {/* Input */}
-            <div className="border-t p-3" style={{ borderColor: 'rgba(255,255,255,0.1)' }}>
+            <div className="border-t border-border p-3" style={{ background: 'hsl(15, 5%, 6%)' }}>
               <div className="flex gap-2">
                 <input
                   value={input}
