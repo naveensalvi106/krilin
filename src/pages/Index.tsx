@@ -141,9 +141,9 @@ const Index = () => {
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3 relative">
             <button onClick={() => { setShowProfile(!showProfile); showProfile ? playClose() : playOpen(); }} className="w-9 h-9 rounded-full overflow-hidden hover:scale-110 transition-transform" title="Profile">
-              <img src="/logo.jpg" alt="Krilin" className="w-full h-full object-cover" />
+              <img src="/logo.png" alt="Easy Flow" className="w-full h-full object-cover" />
             </button>
-            <h1 className="text-lg font-display text-gradient-fire">Krilin</h1>
+            <h1 className="text-lg font-display text-gradient-fire">Easy Flow</h1>
 
             <AnimatePresence>
               {showProfile && (

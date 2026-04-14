@@ -228,7 +228,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
             <div className="flex items-center justify-between px-4 py-3 border-b border-border" style={{ background: 'hsl(15, 5%, 6%)' }}>
               <div className="flex items-center gap-2">
                 <Bot className="w-4 h-4 text-primary" />
-                <span className="font-display text-sm text-gradient-fire">Krilin AI</span>
+                <span className="font-display text-sm text-gradient-fire">Easy Flow AI</span>
               </div>
               <div className="flex items-center gap-1.5">
                 {messages.length > 0 && (
@@ -318,7 +318,7 @@ const ChatWidget = ({ open, onClose, sections, tasks, onAddTask, onToggleTask, o
       onConfirm={() => { clearHistory(); setConfirmClear(false); }}
       onCancel={() => setConfirmClear(false)}
       title="Clear Chat History?"
-      description="This will permanently delete all your chat messages with Krilin AI. Are you sure?"
+      description="This will permanently delete all your chat messages with Easy Flow AI. Are you sure?"
     />
     </>
   );

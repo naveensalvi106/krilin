@@ -1,158 +1,68 @@
 import { useEffect, useRef } from 'react';
 import type { Task } from '@/lib/store';
+import { LocalNotifications } from '@capacitor/local-notifications';
 
-function requestNotificationPermission() {
-  if ('Notification' in window && Notification.permission === 'default') {
-    Notification.requestPermission();
-  }
-}
-
-function vibrate() {
-  if ('vibrate' in navigator) {
-    navigator.vibrate([500, 200, 500, 200, 1000, 300, 500, 200, 500]);
-  }
-}
-
-let alarmCtx: AudioContext | null = null;
-let alarmStop: (() => void) | null = null;
-
-function playAlarmBurst(ctx: AudioContext, dest: GainNode) {
-  const notes = [880, 0, 880, 0, 880, 0, 1100, 0, 1100, 0, 1100];
-  const noteLen = 0.15;
-
-  notes.forEach((freq, i) => {
-    if (freq === 0) return;
-    const osc = ctx.createOscillator();
-    osc.type = 'square';
-    osc.frequency.setValueAtTime(freq, ctx.currentTime + i * noteLen);
-
-    const env = ctx.createGain();
-    env.gain.setValueAtTime(0, ctx.currentTime);
-    env.gain.setValueAtTime(0.3, ctx.currentTime + i * noteLen);
-    env.gain.setValueAtTime(0, ctx.currentTime + (i + 0.8) * noteLen);
-
-    osc.connect(env);
-    env.connect(dest);
-    osc.start(ctx.currentTime + i * noteLen);
-    osc.stop(ctx.currentTime + (i + 1) * noteLen);
-  });
-}
-
-function playAlarm() {
-  try {
-    if (!alarmCtx) alarmCtx = new AudioContext();
-    const ctx = alarmCtx;
-
-    const gainNode = ctx.createGain();
-    gainNode.gain.setValueAtTime(0.4, ctx.currentTime);
-    gainNode.connect(ctx.destination);
-
-    const notes = [880, 0, 880, 0, 880, 0, 1100, 0, 1100, 0, 1100, 0, 880, 0, 880, 0, 880];
-    const noteLen = 0.15;
-    const oscillators: OscillatorNode[] = [];
-
-    notes.forEach((freq, i) => {
-      if (freq === 0) return;
-      const osc = ctx.createOscillator();
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + i * noteLen);
-
-      const env = ctx.createGain();
-      env.gain.setValueAtTime(0, ctx.currentTime);
-      env.gain.setValueAtTime(0.3, ctx.currentTime + i * noteLen);
-      env.gain.setValueAtTime(0, ctx.currentTime + (i + 0.8) * noteLen);
-
-      osc.connect(env);
-      env.connect(gainNode);
-      osc.start(ctx.currentTime + i * noteLen);
-      osc.stop(ctx.currentTime + (i + 1) * noteLen);
-      oscillators.push(osc);
-    });
-
-    const totalDuration = notes.length * noteLen;
-
-    const repeatTimeout1 = setTimeout(() => playAlarmBurst(ctx, gainNode), totalDuration * 1000 + 500);
-    const repeatTimeout2 = setTimeout(() => playAlarmBurst(ctx, gainNode), (totalDuration * 2 + 1) * 1000);
-
-    alarmStop = () => {
-      clearTimeout(repeatTimeout1);
-      clearTimeout(repeatTimeout2);
-      oscillators.forEach(o => { try { o.stop(); } catch {} });
-      alarmStop = null;
-    };
-
-    // Repeat alarm bursts for ~30 seconds total
-    const repeats: ReturnType<typeof setTimeout>[] = [];
-    for (let r = 0; r < 8; r++) {
-      repeats.push(setTimeout(() => playAlarmBurst(ctx, gainNode), (totalDuration + 0.5 + r * 2.5) * 1000));
-    }
-
-    alarmStop = () => {
-      clearTimeout(repeatTimeout1);
-      clearTimeout(repeatTimeout2);
-      repeats.forEach(t => clearTimeout(t));
-      oscillators.forEach(o => { try { o.stop(); } catch {} });
-      alarmStop = null;
-    };
-
-    setTimeout(() => { alarmStop?.(); }, 30000);
-
-  } catch (e) {
-    console.warn('Could not play alarm:', e);
-  }
-}
-
-function showNotification(task: Task) {
-  vibrate();
-  playAlarm();
-
-  if ('Notification' in window && Notification.permission === 'granted') {
-    const n = new Notification('⏰ EasyFlow Reminder', {
-      body: `Time for: ${task.title}`,
-      icon: '/icon-192.png',
-      tag: task.id,
-      requireInteraction: true,
-    });
-    setTimeout(() => n.close(), 30000);
+async function requestNotificationPermission() {
+  const perm = await LocalNotifications.checkPermissions();
+  if (perm.display === 'prompt' || perm.display === 'default') {
+    await LocalNotifications.requestPermissions();
   }
 }
 
 export function useTaskReminders(tasks: Task[]) {
-  const firedRef = useRef<Set<string>>(new Set());
+  const scheduledRef = useRef<boolean>(false);
 
   useEffect(() => {
     requestNotificationPermission();
   }, []);
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      // reminder times are stored as local time, compare with local time
-      const currentTimeLocal = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
-
-      tasks.forEach(task => {
-        if (
-          task.reminderTime &&
-          !task.completed &&
-          task.reminderTime === currentTimeLocal &&
-          !firedRef.current.has(`${task.id}-${currentTimeLocal}`)
-        ) {
-          firedRef.current.add(`${task.id}-${currentTimeLocal}`);
-          showNotification(task);
-        }
-      });
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [tasks]);
-
-  useEffect(() => {
-    const midnight = setInterval(() => {
-      const now = new Date();
-      if (now.getHours() === 0 && now.getMinutes() === 0) {
-        firedRef.current.clear();
+    const syncNotifications = async () => {
+      // 1. Cancel all existing notifications to prevent duplicates
+      const pending = await LocalNotifications.getPending();
+      if (pending.notifications.length > 0) {
+        await LocalNotifications.cancel({ notifications: pending.notifications });
       }
-    }, 60000);
-    return () => clearInterval(midnight);
-  }, []);
+
+      // 2. Schedule new notifications for incomplete tasks with reminder times
+      const now = new Date();
+      const notificationsToSchedule = [];
+
+      for (const task of tasks) {
+        if (!task.reminderTime || task.completed) continue;
+
+        const [hours, minutes] = task.reminderTime.split(':').map(Number);
+        const scheduledTime = new Date();
+        scheduledTime.setHours(hours, minutes, 0, 0);
+
+        // If time has already passed today, schedule for tomorrow
+        if (scheduledTime.getTime() <= now.getTime()) {
+          scheduledTime.setDate(scheduledTime.getDate() + 1);
+        }
+
+        notificationsToSchedule.push({
+          title: '⏰ Easy Flow Reminder',
+          body: `Time for: ${task.title}`,
+          id: Math.abs(task.id.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0)), // Generate numeric ID from task GUID
+          schedule: { at: scheduledTime },
+          sound: 'alarm_sound.wav', // We can configure custom sound later if needed
+          extra: { taskId: task.id },
+        });
+      }
+
+      if (notificationsToSchedule.length > 0) {
+        try {
+          await LocalNotifications.schedule({
+            notifications: notificationsToSchedule
+          });
+          console.log(`Scheduled ${notificationsToSchedule.length} notifications.`);
+        } catch (e) {
+          console.error('Failed to schedule notifications:', e);
+        }
+      }
+    };
+
+    syncNotifications();
+  }, [tasks]);
 }
+
