@@ -2,6 +2,18 @@ import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import type { Json } from "@/integrations/supabase/types";
+import { Capacitor } from "@getcapacitor/core";
+
+// Helper to update native home screen widget
+const updateNativeWidget = (count: number) => {
+  if (Capacitor.isNativePlatform()) {
+    try {
+      (Capacitor as any).Plugins.WidgetBridge?.updateWidget({ count }).catch(() => {});
+    } catch (e) {
+      console.warn('Widget update failed:', e);
+    }
+  }
+};
 
 export interface Problem {
   id: string;
@@ -189,6 +201,14 @@ export function useAppStore() {
 
     return () => { supabase.removeChannel(channel); };
   }, [user]);
+
+  // Sync widget count whenever tasks change
+  useEffect(() => {
+    if (loaded) {
+      const pendingCount = data.tasks.filter(t => !t.completed && !t.customSectionId).length;
+      updateNativeWidget(pendingCount);
+    }
+  }, [data.tasks, loaded]);
 
   useEffect(() => {
     if (!user || !loaded) return;
