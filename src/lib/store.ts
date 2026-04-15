@@ -4,11 +4,16 @@ import { useAuth } from "@/hooks/useAuth";
 import type { Json } from "@/integrations/supabase/types";
 import { Capacitor } from "@capacitor/core";
 
-// Helper to update native home screen widget
-const updateNativeWidget = (count: number) => {
+// Helper to update native home screen widget with task list
+const updateNativeWidget = (pendingTasks: Task[]) => {
   if (Capacitor.isNativePlatform()) {
     try {
-      (Capacitor as any).Plugins.WidgetBridge?.updateWidget({ count }).catch(() => {});
+      const count = pendingTasks.length;
+      const taskList = pendingTasks
+        .slice(0, 6)
+        .map(t => `• ${t.reminderTime ? t.reminderTime + ' ' : ''}${t.title}`)
+        .join('\n');
+      (Capacitor as any).Plugins.WidgetBridge?.updateWidget({ count, taskList }).catch(() => {});
     } catch (e) {
       console.warn('Widget update failed:', e);
     }
@@ -202,11 +207,14 @@ export function useAppStore() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  // Sync widget count whenever tasks change
+  // Sync widget with pending task details whenever tasks change
   useEffect(() => {
     if (loaded) {
-      const pendingCount = data.tasks.filter(t => !t.completed && !t.customSectionId).length;
-      updateNativeWidget(pendingCount);
+      const todayStr = new Date().toISOString().split('T')[0];
+      const pendingTasks = data.tasks
+        .filter(t => !t.completed && !t.customSectionId && t.taskDate === todayStr)
+        .sort((a, b) => a.sortOrder - b.sortOrder);
+      updateNativeWidget(pendingTasks);
     }
   }, [data.tasks, loaded]);
 
