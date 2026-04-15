@@ -4,7 +4,7 @@ import { LocalNotifications } from '@capacitor/local-notifications';
 
 async function requestNotificationPermission() {
   const perm = await LocalNotifications.checkPermissions();
-  if (perm.display === 'prompt' || perm.display === 'default') {
+  if (perm.display === 'prompt' || perm.display === 'prompt-with-rationale') {
     await LocalNotifications.requestPermissions();
   }
 }
@@ -18,13 +18,11 @@ export function useTaskReminders(tasks: Task[]) {
 
   useEffect(() => {
     const syncNotifications = async () => {
-      // 1. Cancel all existing notifications to prevent duplicates
       const pending = await LocalNotifications.getPending();
       if (pending.notifications.length > 0) {
         await LocalNotifications.cancel({ notifications: pending.notifications });
       }
 
-      // 2. Schedule new notifications for incomplete tasks with reminder times
       const now = new Date();
       const notificationsToSchedule = [];
 
@@ -35,7 +33,6 @@ export function useTaskReminders(tasks: Task[]) {
         const scheduledTime = new Date();
         scheduledTime.setHours(hours, minutes, 0, 0);
 
-        // If time has already passed today, schedule for tomorrow
         if (scheduledTime.getTime() <= now.getTime()) {
           scheduledTime.setDate(scheduledTime.getDate() + 1);
         }
@@ -43,18 +40,16 @@ export function useTaskReminders(tasks: Task[]) {
         notificationsToSchedule.push({
           title: '⏰ Easy Flow Reminder',
           body: task.notificationMessage || `Time for: ${task.title}`,
-          id: Math.abs(task.id.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0)), // Generate numeric ID from task GUID
+          id: Math.abs(task.id.split('-').reduce((acc, char) => acc + char.charCodeAt(0), 0)),
           schedule: { at: scheduledTime },
-          sound: 'alarm_sound.wav', // We can configure custom sound later if needed
+          sound: 'alarm_sound.wav',
           extra: { taskId: task.id },
         });
       }
 
       if (notificationsToSchedule.length > 0) {
         try {
-          await LocalNotifications.schedule({
-            notifications: notificationsToSchedule
-          });
+          await LocalNotifications.schedule({ notifications: notificationsToSchedule });
           console.log(`Scheduled ${notificationsToSchedule.length} notifications.`);
         } catch (e) {
           console.error('Failed to schedule notifications:', e);
@@ -65,4 +60,3 @@ export function useTaskReminders(tasks: Task[]) {
     syncNotifications();
   }, [tasks]);
 }
-
