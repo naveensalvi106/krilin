@@ -14,11 +14,8 @@ import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { playTab, playOpen, playClick, playDelete, playAddTask, playClose } from '@/lib/sounds';
 
 const RevivalProtocol = lazy(() => import('@/components/RevivalProtocol'));
-const Notepad = lazy(() => import('@/components/Notepad'));
 const CalendarWidget = lazy(() => import('@/components/CalendarWidget'));
-const MindMapWidget = lazy(() => import('@/components/MindMapWidget'));
 const TickListWidget = lazy(() => import('@/components/TickListWidget'));
-const TelegramLink = lazy(() => import('@/components/TelegramLink'));
 
 const Index = () => {
   const store = useAppStore();
@@ -72,7 +69,6 @@ const Index = () => {
     setShowAddSection(false);
   };
 
-  // Filter tasks by selected date
   const dateFilteredMainTasks = store.allTasks.filter(t => !t.customSectionId && t.taskDate === selectedDateStr).sort((a, b) => {
     if (a.completed !== b.completed) return a.completed ? 1 : -1;
     return a.sortOrder - b.sortOrder;
@@ -88,7 +84,6 @@ const Index = () => {
   const sectionCompletedCount = sectionTasks.filter(t => t.completed).length;
   const sectionTotalCount = sectionTasks.length;
 
-  // Task count and completion by date for calendar
   const taskStatsByDate = useMemo(() => {
     const stats: Record<string, { total: number; completed: number }> = {};
     for (const t of store.allTasks) {
@@ -125,7 +120,6 @@ const Index = () => {
     }
   };
 
-  // Streak only considers today's main tasks
   const todayMainTasks = store.allTasks.filter(t => !t.customSectionId && t.taskDate === todayStr);
   const todayCompleted = todayMainTasks.filter(t => t.completed).length;
   const todayTotal = todayMainTasks.length;
@@ -176,11 +170,6 @@ const Index = () => {
                       </div>
                     ))}
                   </div>
-                  <div className="p-3 border-t border-border">
-                    <Suspense fallback={null}>
-                      <TelegramLink />
-                    </Suspense>
-                  </div>
                   <div className="p-3 border-t border-border space-y-2">
                     <p className="text-xs text-muted-foreground font-medium">Upload task icons</p>
                     <StickerManager stickers={stickers} loading={stickersLoading} onUpload={uploadSticker} onDelete={deleteSticker} />
@@ -210,13 +199,7 @@ const Index = () => {
               )}
             </button>
             <Suspense fallback={null}>
-              <MindMapWidget />
-            </Suspense>
-            <Suspense fallback={null}>
               <TickListWidget />
-            </Suspense>
-            <Suspense fallback={null}>
-              <Notepad />
             </Suspense>
           </div>
         </div>
@@ -225,7 +208,6 @@ const Index = () => {
       {showProfile && <div className="fixed inset-0 z-30" onClick={() => setShowProfile(false)} />}
 
       <div className="max-w-2xl mx-auto px-4 py-6 space-y-6 min-h-[calc(100vh-80px)]">
-        {/* Date indicator when not viewing today */}
         {!isViewingToday && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -242,9 +224,7 @@ const Index = () => {
             <button
               onClick={() => { setSelectedDate(new Date()); playTab(); }}
               className="text-xs px-3 py-1 rounded-full font-medium text-primary-foreground"
-              style={{
-                background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(15, 90%, 45%))',
-              }}
+              style={{ background: 'linear-gradient(135deg, hsl(30, 100%, 55%), hsl(15, 90%, 45%))' }}
             >
               Today
             </button>
@@ -281,13 +261,13 @@ const Index = () => {
                 <div className="flex items-center gap-1 shrink-0">
                   <h2
                     className={`font-display text-sm whitespace-nowrap cursor-pointer px-2 py-1 transition-colors ${cs.id === activeTab ? 'text-gradient-fire border-b-2 border-primary' : 'text-muted-foreground hover:text-foreground'}`}
-                      onClick={() => { setActiveTab(cs.id); playTab(); }}
+                    onClick={() => { setActiveTab(cs.id); playTab(); }}
                   >
                     {cs.name}
                   </h2>
                   {cs.id === activeTab && (
                     <button
-                  onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(cs.id); playClick(); }}
+                      onClick={(e) => { e.stopPropagation(); setConfirmDeleteSection(cs.id); playClick(); }}
                       className="w-4 h-4 rounded-full flex items-center justify-center hover:scale-125 transition-transform"
                       style={{ background: 'hsl(0 60% 40%)' }}
                     >
