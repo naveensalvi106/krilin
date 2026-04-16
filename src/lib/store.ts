@@ -10,7 +10,6 @@ const updateNativeWidget = (pendingTasks: Task[]) => {
     try {
       const count = pendingTasks.length;
       const taskList = pendingTasks
-        .slice(0, 6)
         .map(t => `• ${t.reminderTime ? t.reminderTime + ' ' : ''}${t.title}`)
         .join('\n');
       (Capacitor as any).Plugins.WidgetBridge?.updateWidget({ count, taskList }).catch(() => {});
@@ -210,10 +209,12 @@ export function useAppStore() {
   // Sync widget with pending task details whenever tasks change
   useEffect(() => {
     if (loaded) {
-      const todayStr = new Date().toISOString().split('T')[0];
-      const pendingTasks = data.tasks
-        .filter(t => !t.completed && !t.customSectionId && t.taskDate === todayStr)
-        .sort((a, b) => a.sortOrder - b.sortOrder);
+      const pendingTasks = [...data.tasks]
+        .filter(t => !t.completed)
+        .sort((a, b) => {
+          if (a.taskDate !== b.taskDate) return a.taskDate.localeCompare(b.taskDate);
+          return a.sortOrder - b.sortOrder;
+        });
       updateNativeWidget(pendingTasks);
     }
   }, [data.tasks, loaded]);
@@ -257,7 +258,7 @@ export function useAppStore() {
     const problems = task.problems || [];
     const { data: inserted, error } = await supabase.from('tasks').insert({
       user_id: user.id, title: task.title, section_id: task.sectionId, bandaids: task.bandaids,
-      reminder_time: reminderTimeToStore, notification_message: task.notificationMessage || null,
+      reminder_time: reminderTimeToStore,
       icon_url: task.iconUrls?.[0] || null, icon_urls: task.iconUrls || [],
       problems: problems as unknown as Json, custom_section_id: task.customSectionId || null,
       sort_order: newSortOrder, task_date: taskDate,
@@ -267,7 +268,7 @@ export function useAppStore() {
       const newTask: Task = {
         id: inserted.id, title: inserted.title, sectionId: inserted.section_id, completed: inserted.completed,
         bandaids: inserted.bandaids || [], problems: (inserted.problems as unknown as Problem[]) || [],
-        reminderTime: inserted.reminder_time || undefined, notificationMessage: raw.notification_message || undefined,
+        reminderTime: inserted.reminder_time || undefined,
         iconUrls: raw.icon_urls || (raw.icon_url ? [raw.icon_url] : []), createdAt: inserted.created_at,
         sortOrder: raw.sort_order ?? 0, customSectionId: raw.custom_section_id || undefined,
         taskDate: raw.task_date || taskDate,
@@ -309,17 +310,12 @@ export function useAppStore() {
       // Store as-is (local time, no UTC conversion)
       dbUpdates.reminder_time = updates.reminderTime || null;
     }
-    if (updates.notificationMessage !== undefined) {
-      dbUpdates.notification_message = updates.notificationMessage || null;
-    }
     await supabase.from('tasks').update(dbUpdates).eq('id', id);
     setData(d => ({
       ...d,
       tasks: d.tasks.map(t => t.id === id ? {
         ...t,
         ...updates,
-        ...(updates.reminderTime !== undefined ? { reminderTime: updates.reminderTime || undefined } : {}),
-        ...(updates.notificationMessage !== undefined ? { notificationMessage: updates.notificationMessage || undefined } : {}),
       } : t),
     }));
   }, []);

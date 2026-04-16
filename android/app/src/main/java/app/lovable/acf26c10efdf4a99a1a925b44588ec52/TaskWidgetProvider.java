@@ -41,12 +41,11 @@ public class TaskWidgetProvider extends AppWidgetProvider {
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.task_widget_layout);
         views.setTextViewText(R.id.widget_count_text, String.valueOf(count));
 
-        // Show task names if available
         if (!taskList.isEmpty()) {
             views.setTextViewText(R.id.widget_task_list, taskList);
-            views.setViewVisibility(R.id.widget_task_list, android.view.View.VISIBLE);
+            views.setViewVisibility(R.id.widget_task_scroll, android.view.View.VISIBLE);
         } else {
-            views.setViewVisibility(R.id.widget_task_list, android.view.View.GONE);
+            views.setViewVisibility(R.id.widget_task_scroll, android.view.View.GONE);
         }
 
         // Tap widget to open app
