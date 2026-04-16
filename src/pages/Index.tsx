@@ -21,7 +21,6 @@ const lazyRetry = (fn: () => Promise<any>) =>
 
 const RevivalProtocol = lazyRetry(() => import('@/components/RevivalProtocol'));
 const CalendarWidget = lazyRetry(() => import('@/components/CalendarWidget'));
-const TickListWidget = lazyRetry(() => import('@/components/TickListWidget'));
 
 const Index = () => {
   const store = useAppStore();
@@ -204,9 +203,6 @@ const Index = () => {
                 <span className="absolute -bottom-0.5 text-[8px] font-bold text-white">{format(selectedDate, 'd')}</span>
               )}
             </button>
-            <Suspense fallback={null}>
-              <TickListWidget />
-            </Suspense>
           </div>
         </div>
       </div>

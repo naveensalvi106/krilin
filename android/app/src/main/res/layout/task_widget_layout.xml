@@ -60,19 +60,24 @@
             android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- Task list preview -->
-    <TextView
-        android:id="@+id/widget_task_list"
+    <ScrollView
+        android:id="@+id/widget_task_scroll"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:layout_marginTop="8dp"
-        android:text=""
-        android:textColor="#DDDDDD"
-        android:textSize="12sp"
-        android:lineSpacingExtra="2dp"
-        android:maxLines="6"
-        android:ellipsize="end"
-        android:visibility="gone" />
+        android:fillViewport="true"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/widget_task_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textColor="#DDDDDD"
+            android:textSize="12sp"
+            android:lineSpacingExtra="2dp" />
+
+    </ScrollView>
 
 </LinearLayout>
