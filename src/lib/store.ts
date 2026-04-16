@@ -201,7 +201,7 @@ export function useAppStore() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'visualizations', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'revival_videos', filter: `user_id=eq.${user.id}` }, () => { load(); })
       .on('postgres_changes', { event: '*', schema: 'public', table: 'revival_steps', filter: `user_id=eq.${user.id}` }, () => { load(); })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notepad_sections', filter: `user_id=eq.${user.id}` }, () => { load(); })
+      
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
