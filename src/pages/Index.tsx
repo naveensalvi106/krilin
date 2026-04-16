@@ -13,9 +13,15 @@ import { useTaskReminders } from '@/hooks/useTaskReminders';
 import { usePushSubscription } from '@/hooks/usePushSubscription';
 import { playTab, playOpen, playClick, playDelete, playAddTask, playClose } from '@/lib/sounds';
 
-const RevivalProtocol = lazy(() => import('@/components/RevivalProtocol'));
-const CalendarWidget = lazy(() => import('@/components/CalendarWidget'));
-const TickListWidget = lazy(() => import('@/components/TickListWidget'));
+const lazyRetry = (fn: () => Promise<any>) =>
+  lazy(() => fn().catch(() => {
+    window.location.reload();
+    return new Promise(() => {}); // never resolves, page will reload
+  }));
+
+const RevivalProtocol = lazyRetry(() => import('@/components/RevivalProtocol'));
+const CalendarWidget = lazyRetry(() => import('@/components/CalendarWidget'));
+const TickListWidget = lazyRetry(() => import('@/components/TickListWidget'));
 
 const Index = () => {
   const store = useAppStore();
